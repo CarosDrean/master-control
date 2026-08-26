@@ -1,0 +1,18 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #0f0f0f;      /* fondo oscuro real */
+    color: white;
+    font-family: system-ui, sans-serif;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    background: #0f0f0f !important;
+}

@@ -1,0 +1,26 @@
+# IDE
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Go
+bbolt.db
+
+# Node
+node_modules
+.pnpm-store
+
+# Frontend output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build

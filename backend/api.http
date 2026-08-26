@@ -1,0 +1,50 @@
+### GET actions
+GET http://0.0.0.0:8080/master-control/actions
+Accept: application/json
+
+### Obtener acción por ID
+GET http://0.0.0.0:8080/master-control/actions/open_vscode
+Accept: application/json
+
+### Ejecutar VSCode
+POST http://0.0.0.0:8080/master-control/actions/open_vscode/execute
+
+### Eliminar acción
+DELETE http://0.0.0.0:8080/master-control/actions/open_vscode
+
+### Crear una acción tipo command
+POST http://0.0.0.0:8080/master-control/actions
+Content-Type: application/json
+
+{
+  "id": "open_vscode",
+  "label": "Abrir VSCode",
+  "icon": "vscode.png",
+  "type": "command",
+  "command": "open -a 'Visual Studio Code'"
+}
+
+
+### Crear una acción tipo AppleScript (ctrl+tab)
+POST http://0.0.0.0:8080/master-control/actions
+Content-Type: application/json
+
+{
+  "id": "next_tab",
+  "label": "Next Tab",
+  "icon": "tab.png",
+  "type": "applescript",
+  "command": "tell application \"System Events\" to key code 48 using control down"
+}
+
+### Crear acción scroll simple (flecha abajo repetida)
+POST http://0.0.0.0:8080/master-control/actions
+Content-Type: application/json
+
+{
+  "id": "scroll_down",
+  "label": "Scroll Down",
+  "icon": "scroll.png",
+  "type": "applescript",
+  "command": "repeat 10 times tell application \\\"System Events\\\" to key code 125 end repeat"
+}

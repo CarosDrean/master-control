@@ -1,0 +1,279 @@
+{
+  ".svelte-kit/generated/client-optimized/app.js": {
+    "file": "_app/immutable/entry/app.NYNHImNJ.js",
+    "name": "entry/app",
+    "src": ".svelte-kit/generated/client-optimized/app.js",
+    "isEntry": true,
+    "imports": [
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_CjOT7DqJ.js",
+      "_CB-bpaqV.js",
+      "_przgBURD.js"
+    ],
+    "dynamicImports": [
+      ".svelte-kit/generated/client-optimized/nodes/0.js",
+      ".svelte-kit/generated/client-optimized/nodes/1.js",
+      ".svelte-kit/generated/client-optimized/nodes/2.js",
+      ".svelte-kit/generated/client-optimized/nodes/3.js",
+      ".svelte-kit/generated/client-optimized/nodes/4.js",
+      ".svelte-kit/generated/client-optimized/nodes/5.js",
+      ".svelte-kit/generated/client-optimized/nodes/6.js"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/0.js": {
+    "file": "_app/immutable/nodes/0.BNEEzNzB.js",
+    "name": "nodes/0",
+    "src": ".svelte-kit/generated/client-optimized/nodes/0.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_Byv6-FrO.js"
+    ],
+    "css": [
+      "_app/immutable/assets/0.CL-RqtoZ.css"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/1.js": {
+    "file": "_app/immutable/nodes/1.DM7mvPX-.js",
+    "name": "nodes/1",
+    "src": ".svelte-kit/generated/client-optimized/nodes/1.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_Byv6-FrO.js"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/2.js": {
+    "file": "_app/immutable/nodes/2.Cx6l-7Z-.js",
+    "name": "nodes/2",
+    "src": ".svelte-kit/generated/client-optimized/nodes/2.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_agdgUxYN.js",
+      "_CB-bpaqV.js",
+      "_DlA7ngMY.js",
+      "_przgBURD.js",
+      "_NWHq_QKj.js",
+      "_BH50y_bU.js"
+    ],
+    "css": [
+      "_app/immutable/assets/2.BPn7QbaQ.css"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/3.js": {
+    "file": "_app/immutable/nodes/3.BMdbTXvw.js",
+    "name": "nodes/3",
+    "src": ".svelte-kit/generated/client-optimized/nodes/3.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_agdgUxYN.js",
+      "_CB-bpaqV.js",
+      "_NWHq_QKj.js",
+      "_Byv6-FrO.js"
+    ],
+    "css": [
+      "_app/immutable/assets/3.BAH9x_Yl.css"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/4.js": {
+    "file": "_app/immutable/nodes/4.D_57zd-v.js",
+    "name": "nodes/4",
+    "src": ".svelte-kit/generated/client-optimized/nodes/4.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_agdgUxYN.js",
+      "_CB-bpaqV.js",
+      "_DlA7ngMY.js",
+      "_CsCXpXX7.js",
+      "_BgphuEiy.js",
+      "_przgBURD.js",
+      "_Byv6-FrO.js",
+      "_NWHq_QKj.js",
+      "_BH50y_bU.js"
+    ],
+    "css": [
+      "_app/immutable/assets/4.DS-nJe2q.css"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/5.js": {
+    "file": "_app/immutable/nodes/5.BaX9jBG2.js",
+    "name": "nodes/5",
+    "src": ".svelte-kit/generated/client-optimized/nodes/5.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_agdgUxYN.js",
+      "_CB-bpaqV.js",
+      "_DlA7ngMY.js",
+      "_CsCXpXX7.js",
+      "_BgphuEiy.js",
+      "_Byv6-FrO.js",
+      "_NWHq_QKj.js",
+      "_BH50y_bU.js"
+    ],
+    "css": [
+      "_app/immutable/assets/5.B1ZVp5MA.css"
+    ]
+  },
+  ".svelte-kit/generated/client-optimized/nodes/6.js": {
+    "file": "_app/immutable/nodes/6.CqYRqlHZ.js",
+    "name": "nodes/6",
+    "src": ".svelte-kit/generated/client-optimized/nodes/6.js",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "imports": [
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_zOMElYW0.js",
+      "_DCdb0mg_.js",
+      "_agdgUxYN.js",
+      "_CB-bpaqV.js",
+      "_CsCXpXX7.js",
+      "_BH50y_bU.js",
+      "_Byv6-FrO.js"
+    ],
+    "css": [
+      "_app/immutable/assets/6.BRsqWgx3.css"
+    ]
+  },
+  "_B4xtv_Ge.js": {
+    "file": "_app/immutable/chunks/B4xtv_Ge.js",
+    "name": "legacy",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_BH50y_bU.js": {
+    "file": "_app/immutable/chunks/BH50y_bU.js",
+    "name": "pages",
+    "imports": [
+      "_agdgUxYN.js"
+    ]
+  },
+  "_BgphuEiy.js": {
+    "file": "_app/immutable/chunks/BgphuEiy.js",
+    "name": "HotkeyRecorder",
+    "imports": [
+      "_zOMElYW0.js",
+      "_agdgUxYN.js",
+      "_CjOT7DqJ.js",
+      "_B4xtv_Ge.js",
+      "_DCdb0mg_.js",
+      "_CB-bpaqV.js",
+      "_DlA7ngMY.js",
+      "_CsCXpXX7.js",
+      "_przgBURD.js"
+    ],
+    "css": [
+      "_app/immutable/assets/HotkeyRecorder.YTOPTaUQ.css"
+    ]
+  },
+  "_Byv6-FrO.js": {
+    "file": "_app/immutable/chunks/Byv6-FrO.js",
+    "name": "entry",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_CB-bpaqV.js": {
+    "file": "_app/immutable/chunks/CB-bpaqV.js",
+    "name": "if",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_CjOT7DqJ.js": {
+    "file": "_app/immutable/chunks/CjOT7DqJ.js",
+    "name": "disclose-version",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_CsCXpXX7.js": {
+    "file": "_app/immutable/chunks/CsCXpXX7.js",
+    "name": "input",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_DCdb0mg_.js": {
+    "file": "_app/immutable/chunks/DCdb0mg_.js",
+    "name": "render",
+    "imports": [
+      "_zOMElYW0.js",
+      "_CjOT7DqJ.js"
+    ]
+  },
+  "_DlA7ngMY.js": {
+    "file": "_app/immutable/chunks/DlA7ngMY.js",
+    "name": "class",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_HotkeyRecorder.YTOPTaUQ.css": {
+    "file": "_app/immutable/assets/HotkeyRecorder.YTOPTaUQ.css",
+    "src": "_HotkeyRecorder.YTOPTaUQ.css"
+  },
+  "_NWHq_QKj.js": {
+    "file": "_app/immutable/chunks/NWHq_QKj.js",
+    "name": "actions",
+    "imports": [
+      "_agdgUxYN.js"
+    ]
+  },
+  "_agdgUxYN.js": {
+    "file": "_app/immutable/chunks/agdgUxYN.js",
+    "name": "api",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_przgBURD.js": {
+    "file": "_app/immutable/chunks/przgBURD.js",
+    "name": "props",
+    "imports": [
+      "_zOMElYW0.js"
+    ]
+  },
+  "_zOMElYW0.js": {
+    "file": "_app/immutable/chunks/zOMElYW0.js",
+    "name": "index-client"
+  },
+  "node_modules/.pnpm/@sveltejs+kit@2.49.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte@5.45.2_vite@7.2.4__svelte@5.45.2_vite@7.2.4/node_modules/@sveltejs/kit/src/runtime/client/entry.js": {
+    "file": "_app/immutable/entry/start.DtnCJ_AS.js",
+    "name": "entry/start",
+    "src": "node_modules/.pnpm/@sveltejs+kit@2.49.0_@sveltejs+vite-plugin-svelte@6.2.1_svelte@5.45.2_vite@7.2.4__svelte@5.45.2_vite@7.2.4/node_modules/@sveltejs/kit/src/runtime/client/entry.js",
+    "isEntry": true,
+    "imports": [
+      "_Byv6-FrO.js"
+    ]
+  }
+}
