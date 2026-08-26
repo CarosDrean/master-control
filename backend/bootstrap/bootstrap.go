@@ -18,6 +18,7 @@ import (
 	actionRepository "master-control/infrastructure/repository/action"
 	actiontypeRepository "master-control/infrastructure/repository/actiontype"
 	pageRepository "master-control/infrastructure/repository/page"
+	"master-control/infrastructure/system"
 	"master-control/model"
 )
 
@@ -63,12 +64,15 @@ func Run() {
 	}
 	pageUseCase := page.New(pageRepo)
 
+	systemController := system.New()
+
 	handler.InitRoutes(model.RouterSpecification{
 		Api: apiGroup,
 		Dependencies: model.Dependencies{
-			ActionUseCase:     action.New(actionRepository.New(db), actionTypeUseCase),
+			ActionUseCase:     action.New(actionRepository.New(db), actionTypeUseCase, systemController),
 			ActionTypeUseCase: actionTypeUseCase,
 			PageUseCase:       pageUseCase,
+			SystemUseCase:     systemController,
 		},
 	})
 

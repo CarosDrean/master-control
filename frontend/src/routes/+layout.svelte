@@ -1,6 +1,7 @@
 <script>
     import '../app.css';
     import { goto } from '$app/navigation';
+    import SystemHud from '$lib/components/SystemHud.svelte';
 </script>
 
 <style>
@@ -97,3 +98,5 @@
 <main>
     <slot />
 </main>
+
+<SystemHud />

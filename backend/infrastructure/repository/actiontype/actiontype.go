@@ -43,7 +43,7 @@ var defaults = []model.ActionType{
 		ID:              "system",
 		Key:             "system",
 		Name:            "System",
-		Description:     "Control volume, brightness and media via osascript",
+		Description:     "Control volume, brightness and media natively",
 		CommandTemplate: "osascript -e",
 	},
 }

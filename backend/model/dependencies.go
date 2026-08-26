@@ -24,8 +24,18 @@ type PageUseCase interface {
 	Delete(ctx context.Context, id string) error
 }
 
+type SystemUseCase interface {
+	Execute(ctx context.Context, token string) error
+	GetCatalog(ctx context.Context) ([]SystemAction, error)
+	GetVolume(ctx context.Context) (SystemVolume, error)
+	GetBrightness(ctx context.Context) (SystemBrightness, error)
+	SetVolume(ctx context.Context, volume int) error
+	SetBrightness(ctx context.Context, brightness float64) error
+}
+
 type Dependencies struct {
 	ActionUseCase     ActionUseCase
 	ActionTypeUseCase ActionTypeUseCase
 	PageUseCase       PageUseCase
+	SystemUseCase     SystemUseCase
 }

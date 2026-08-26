@@ -19,3 +19,7 @@ type UseCaseActionType interface {
 	Get(ctx context.Context, ID string) (model.ActionType, error)
 	Delete(ctx context.Context, ID string) error
 }
+
+type UseCaseSystem interface {
+	Execute(ctx context.Context, token string) error
+}

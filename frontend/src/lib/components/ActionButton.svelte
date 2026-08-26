@@ -1,14 +1,21 @@
 <script lang="ts">
     import { executeAction } from '$lib/api/actions';
+    import { executeSystemActionWithFeedback } from '$lib/api/system';
 
     export let id: string;
     export let label: string;
     export let icon: string | undefined;
+    export let type: string | undefined;
+    export let command: string | undefined;
 
     const isImage = !!icon && (icon.startsWith("http") || icon.startsWith("/") || /\.(png|jpe?g|svg|webp|gif|ico)$/i.test(icon));
 
     const handleClick = () => {
-        executeAction(id);
+        if (type === "system" && command) {
+            executeSystemActionWithFeedback({ id, label, icon: icon, type, command });
+        } else {
+            executeAction(id);
+        }
     };
 </script>
 

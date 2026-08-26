@@ -135,7 +135,7 @@
                     {:else}
                         <div class="grid">
                             {#each byPage(p.id) as a}
-                                <ActionButton id={a.id} label={a.label} icon={a.icon} />
+                                <ActionButton id={a.id} label={a.label} icon={a.icon} type={a.type} command={a.command} />
                             {/each}
                         </div>
                     {/if}

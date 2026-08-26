@@ -10,6 +10,7 @@ import (
 	appHandler "master-control/infrastructure/handler/app"
 	"master-control/infrastructure/handler/hotkey"
 	"master-control/infrastructure/handler/page"
+	systemHandler "master-control/infrastructure/handler/system"
 	"master-control/model"
 )
 
@@ -20,6 +21,7 @@ func InitRoutes(specification model.RouterSpecification) {
 	appHandler.NewRouter(specification.Api)
 	hotkey.NewRouter(specification.Api)
 	page.NewRouter(specification)
+	systemHandler.NewRouter(specification.Api, specification.Dependencies.SystemUseCase)
 }
 
 func healthRoutes(api *gin.RouterGroup) {

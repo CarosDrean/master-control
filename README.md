@@ -96,21 +96,6 @@ Prefijo base: `/master-control` · CORS abierto · BBDD: bbolt (`bbolt.db`)
 | GET    | `/apps/icon?path=...`         | Icono por ruta                           |
 | POST   | `/hotkey/capture`             | Espera una tecla (≤15 s) y devuelve hotkey |
 
-### Modelo de acción
-
-```json
-{
-  "id": "open_vscode",
-  "label": "Abrir VSCode",
-  "icon": "vscode.png",
-  "type": "command",
-  "command": "open -a 'Visual Studio Code'",
-  "page": "dev"
-}
-```
-
-`type` puede ser `command` o `applescript`. Ejemplos completos de creación/ejecución en `backend/api.http`.
-
 ## Notas para macOS
 
 - `POST /hotkey/capture` **bloquea hasta 15 s** esperando una tecla y requiere que el terminal/backend tenga el permiso de **Accesibilidad** del sistema.

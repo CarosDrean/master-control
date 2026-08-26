@@ -15,6 +15,7 @@
     let warning = "";
     let manual = "";
     let manualError = "";
+    let manualOpen = false;
 
     const MODIFIER_KEYS = new Set(["meta", "control", "alt", "shift"]);
 
@@ -198,7 +199,8 @@
         if (MODIFIER_KEYS.has(e.key)) {
             heldMods = modsFromEvent(e);
             if (heldMods.length === 0 && modsEverPressed) {
-                warning = "Parece que el sistema interceptó el atajo (Spotlight, Mission Control, ⌘Tab…). El navegador no puede capturarlo: usa el campo manual de abajo.";
+                warning = "Parece que el sistema interceptó el atajo (Spotlight, Mission Control, ⌘Tab…). El navegador no puede capturarlo: usa el campo manual.";
+                manualOpen = true;
                 stopRecording();
             }
         }
@@ -206,7 +208,8 @@
 
     function onBlur() {
         if (!recording) return;
-        warning = "La ventana perdió el foco, así que el sistema interceptó el atajo. Usa el campo manual de abajo.";
+        warning = "La ventana perdió el foco, así que el sistema interceptó el atajo. Usa el campo manual.";
+        manualOpen = true;
         stopRecording();
     }
 
@@ -437,6 +440,21 @@
         background: #292929;
     }
 
+    .btn-manual-toggle {
+        background: none;
+        border: none;
+        color: #888;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 6px 0;
+        margin-bottom: 12px;
+        transition: color 0.15s;
+    }
+
+    .btn-manual-toggle:hover {
+        color: #ccc;
+    }
+
     .manual-error {
         font-size: 0.8rem;
         color: #ffb3b3;
@@ -504,17 +522,23 @@
     <div class="warning">{warning}</div>
 {/if}
 
-<div class="manual">
-    <input
-        bind:value={manual}
-        on:keydown={(e) => e.key === "Enter" && applyManual()}
-        placeholder="Manual: cmd+shift+p, option+space, ctrl+f12"
-    />
-    <button type="button" class="btn-manual" on:click={applyManual}>Aplicar</button>
-</div>
+<button type="button" class="btn-manual-toggle" on:click={() => (manualOpen = !manualOpen)}>
+    {manualOpen ? '− Ocultar manual' : '+ Manual'}
+</button>
 
-{#if manualError}
-    <div class="manual-error">{manualError}</div>
+{#if manualOpen}
+    <div class="manual">
+        <input
+            bind:value={manual}
+            on:keydown={(e) => e.key === "Enter" && applyManual()}
+            placeholder="Manual: cmd+shift+p, option+space, ctrl+f12"
+        />
+        <button type="button" class="btn-manual" on:click={applyManual}>Aplicar</button>
+    </div>
+
+    {#if manualError}
+        <div class="manual-error">{manualError}</div>
+    {/if}
 {/if}
 
 <textarea

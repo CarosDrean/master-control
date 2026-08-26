@@ -15,12 +15,14 @@ const commandTimeout = 10 * time.Second
 type Action struct {
 	repository Repository
 	actionType UseCaseActionType
+	system     UseCaseSystem
 }
 
-func New(repository Repository, actionType UseCaseActionType) *Action {
+func New(repository Repository, actionType UseCaseActionType, system UseCaseSystem) *Action {
 	return &Action{
 		repository: repository,
 		actionType: actionType,
+		system:     system,
 	}
 }
 
@@ -28,6 +30,10 @@ func (a *Action) Execute(ctx context.Context, id string) error {
 	action, err := a.repository.Get(ctx, id)
 	if err != nil {
 		return err
+	}
+
+	if action.Type == "system" {
+		return a.system.Execute(ctx, action.Command)
 	}
 
 	actionType, err := a.actionType.Get(ctx, action.Type)

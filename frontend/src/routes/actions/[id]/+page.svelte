@@ -1,13 +1,15 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { getAction, updateAction, executeAction } from '$lib/api/actions';
+import { getAction, updateAction } from '$lib/api/actions';
     import { getActionTypes } from '$lib/api/actiontypes';
     import type { ActionType } from '$lib/api/actiontypes';
     import { getPages } from '$lib/api/pages';
     import type { Page } from '$lib/api/pages';
     import { getApps, appIconUrl, appActionId } from '$lib/api/apps';
     import type { App } from '$lib/api/apps';
+    import { getSystemActions, executeSystemActionWithFeedback } from '$lib/api/system';
+    import type { SystemAction } from '$lib/api/system';
     import HotkeyRecorder from '$lib/components/HotkeyRecorder.svelte';
 
     export let params;
@@ -17,6 +19,9 @@
     let apps: App[] = [];
     let appSearch = "";
     let appOpen = false;
+    let systemActions: SystemAction[] = [];
+    let systemSearch = "";
+    let systemOpen = false;
 
     let action: any = null;
 
@@ -34,10 +39,26 @@
         ? apps.filter(a => a.name.toLowerCase().includes(appSearch.toLowerCase()))
         : apps;
     $: selectedApp = apps.find(a => a.name === command);
+    $: filteredSystemActions = systemSearch
+        ? systemActions.filter(a => a.label.toLowerCase().includes(systemSearch.toLowerCase()))
+        : systemActions;
+    $: selectedSystem = systemActions.find(a => a.command === command);
 
     function openAppPicker() {
         appSearch = "";
         appOpen = true;
+    }
+
+    function openSystemPicker() {
+        systemSearch = "";
+        systemOpen = true;
+    }
+
+    function selectSystem(a: SystemAction) {
+        command = a.command;
+        icon = a.icon;
+        label = a.label;
+        systemOpen = false;
     }
 
     function selectApp(a: App) {
@@ -59,7 +80,7 @@
     }
 
     onMount(async () => {
-        [action, actionTypes, pages, apps] = await Promise.all([getAction(params.id), getActionTypes(), getPages(), getApps()]);
+        [action, actionTypes, pages, apps, systemActions] = await Promise.all([getAction(params.id), getActionTypes(), getPages(), getApps(), getSystemActions()]);
         pages = pages.sort((a, b) => a.order - b.order);
 
         id = action.id;
@@ -95,7 +116,7 @@
 
     async function test() {
         try {
-            await executeAction(id);
+            await executeSystemActionWithFeedback({ id, label, icon, type, command });
             showMessage("Acción ejecutada", "success");
         } catch (e) {
             showMessage("Error al ejecutar", "error");
@@ -198,6 +219,12 @@
 
     .app-select .placeholder {
         opacity: 0.5;
+    }
+
+    .sys-icon {
+        width: 26px;
+        flex-shrink: 0;
+        text-align: center;
     }
 
     .app-select .chevron {
@@ -432,6 +459,41 @@
             <div class="field">
                 <label for="hotkey-command">Hotkey</label>
                 <HotkeyRecorder bind:command={command} />
+            </div>
+        {:else if type === "system"}
+            <div class="field">
+                <label for="system-search">Acción del sistema</label>
+                {#if systemOpen}
+                    <input id="system-search" bind:value={systemSearch} placeholder="Buscar acción…" />
+                    <div class="app-list">
+                        {#each filteredSystemActions as sa}
+                            <button
+                                type="button"
+                                class="app-item {command === sa.command ? 'selected' : ''}"
+                                on:click={() => selectSystem(sa)}
+                            >
+                                <span class="sys-icon">{sa.icon}</span>
+                                <span>{sa.label}</span>
+                                {#if command === sa.command}
+                                    <span class="check">✓</span>
+                                {/if}
+                            </button>
+                        {/each}
+                        {#if filteredSystemActions.length === 0}
+                            <div class="app-empty">Sin resultados</div>
+                        {/if}
+                    </div>
+                {:else}
+                    <button type="button" class="app-select" on:click={openSystemPicker}>
+                        {#if selectedSystem}
+                            <span class="sys-icon">{selectedSystem.icon}</span>
+                            <span>{selectedSystem.label}</span>
+                        {:else}
+                            <span class="placeholder">Selecciona una acción…</span>
+                        {/if}
+                        <span class="chevron">▾</span>
+                    </button>
+                {/if}
             </div>
         {:else}
             <div class="field">
