@@ -10,7 +10,7 @@ Master Control: macOS control panel (trigger actions/hotkeys/apps on the Mac fro
 ## Dev commands (run from each dir; there is no root package.json)
 
 ```sh
-./.dev.sh                       # both services together (go run . + pnpm dev)
+./dev.sh                        # both services together (go run . + pnpm dev)
 cd backend && go run .          # backend on http://localhost:8080/master-control
 cd frontend && pnpm install && pnpm dev   # SvelteKit
 ```
