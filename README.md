@@ -79,7 +79,7 @@ Levanta ambos servicios desde la raíz:
 ./dev.sh
 ```
 
-Equivale a correr `go run .` en `backend/` y `pnpm dev --host` en `frontend/`. El script detecta la IP local de tu Mac y muestra las URLs para conectarte desde una tablet o celular en la misma red (UI y API).
+Equivale a correr `go run .` en `backend/` y `pnpm dev --host` en `frontend/`. Crea `backend/.env` con valores por defecto si no existe, y detecta la IP local de tu Mac para mostrar las URLs a las que conectarte desde una tablet o celular en la misma red (UI y API).
 
 ### Backend
 
@@ -88,12 +88,19 @@ cd backend
 go run .
 ```
 
-Servidor en `http://localhost:8080/master-control`. Configuración vía `backend/.env` (ver `backend/.gitignore`):
+Servidor en `http://localhost:8080/master-control`. Configuración vía `backend/.env` (ver `backend/.gitignore`). `./dev.sh` crea `backend/.env` automáticamente con valores por defecto si no existe:
+
+```sh
+GIN_MODE=release
+APP_NAME=master-control
+BUCKET_NAME=actions
+```
 
 | Variable    | Uso                                            |
 |-------------|------------------------------------------------|
 | `GIN_MODE`  | Modo de Gin (`debug` / `release`)              |
 | `APP_NAME`  | Prefijo de ruta de la API; usa `master-control` |
+| `BUCKET_NAME` | Reservado (los buckets de bbolt están definidos en el código) |
 
 > Si `APP_NAME` queda vacío, la API se sirve en `/` en vez de `/master-control`.
 

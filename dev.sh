@@ -5,6 +5,17 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_PID=""
 FRONTEND_PID=""
 
+ENV_FILE="$ROOT_DIR/backend/.env"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+	echo "▶ Creando $ENV_FILE con valores por defecto"
+	cat > "$ENV_FILE" <<'EOF'
+GIN_MODE=release
+APP_NAME=master-control
+BUCKET_NAME=actions
+EOF
+fi
+
 LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
 
 cleanup() {
