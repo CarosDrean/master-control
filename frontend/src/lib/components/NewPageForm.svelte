@@ -16,6 +16,20 @@
         order = pages.length;
     });
 
+    function slugify(s: string): string {
+        return s
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "");
+    }
+
+    function onNameInput(e: Event) {
+        name = (e.target as HTMLInputElement).value;
+        id = slugify(name);
+    }
+
     async function save() {
         if (!id || !name) return;
         await createPage({ id, name, icon, order, columns, rows });
@@ -84,12 +98,8 @@
 </style>
 
 <div class="field">
-    <label for="page-id">ID</label>
-    <input id="page-id" bind:value={id} placeholder="general" />
-</div>
-<div class="field">
     <label for="page-name">Nombre</label>
-    <input id="page-name" bind:value={name} placeholder="General" />
+    <input id="page-name" value={name} on:input={onNameInput} placeholder="General" />
 </div>
 <div class="field">
     <label for="page-icon">Icono (emoji)</label>

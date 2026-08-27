@@ -3,8 +3,6 @@
     import { createAction } from '$lib/api/actions';
     import { getActionTypes } from '$lib/api/actiontypes';
     import type { ActionType } from '$lib/api/actiontypes';
-    import { getPages } from '$lib/api/pages';
-    import type { Page } from '$lib/api/pages';
     import { getApps, appIconUrl, appActionId } from '$lib/api/apps';
     import type { App } from '$lib/api/apps';
     import { getSystemActions } from '$lib/api/system';
@@ -16,7 +14,6 @@
     export let onSaved: () => void = () => {};
 
     let actionTypes: ActionType[] = [];
-    let pages: Page[] = [];
     let apps: App[] = [];
     let appSearch = "";
     let appOpen = false;
@@ -24,7 +21,6 @@
     let systemSearch = "";
     let systemOpen = false;
     let type = "";
-    let page = pageId;
     let positionStr = "";
     let id = "";
     let idAuto = true;
@@ -34,7 +30,6 @@
 
     // La posición se fija al elegir un slot: no es editable ni visible.
     $: locked = position !== null && position !== undefined;
-    $: lockedPageName = pages.find(p => p.id === pageId)?.name ?? pageId;
 
     function slugify(s: string): string {
         return s
@@ -53,11 +48,6 @@
             id = slugify(value);
             idAuto = true;
         }
-    }
-
-    function onIdInput(e: Event) {
-        id = (e.target as HTMLInputElement).value;
-        idAuto = false;
     }
 
     function onHotkeyCaptured(info: { modifiers: string[]; key: string }) {
@@ -112,15 +102,9 @@
     }
 
     onMount(async () => {
-        [actionTypes, pages, apps, systemActions] = await Promise.all([getActionTypes(), getPages(), getApps(), getSystemActions()]);
-        pages = pages.sort((a, b) => a.order - b.order);
+        [actionTypes, apps, systemActions] = await Promise.all([getActionTypes(), getApps(), getSystemActions()]);
         if (actionTypes.length > 0) {
             type = actionTypes[0].id;
-        }
-        if (pages.some(p => p.id === pageId)) {
-            page = pageId;
-        } else if (pages.length > 0) {
-            page = pages[0].id;
         }
     });
 
@@ -149,7 +133,7 @@
                 type,
                 command,
                 icon,
-                page,
+                page: pageId,
                 position: locked ? position! : (positionStr === "" ? -1 : parseInt(positionStr, 10))
             });
 
@@ -246,16 +230,6 @@
     textarea {
         min-height: 120px;
         resize: vertical;
-    }
-
-    .fixed-page {
-        background: #1f1f1f;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 10px;
-        padding: 12px 14px;
-        color: white;
-        font-size: 0.95rem;
-        opacity: 0.85;
     }
 
     .app-list {
@@ -419,21 +393,6 @@
 
 <div class="panel">
     <div class="field">
-        <label for="id">ID</label>
-        <input id="id" value={id} on:input={onIdInput} placeholder="ID único" />
-    </div>
-
-    <div class="field">
-        <label for="label">Label</label>
-        <input id="label" value={label} on:input={onLabelInput} placeholder="Nombre visible" />
-    </div>
-
-    <div class="field">
-        <label for="icon">Icono (emoji o URL)</label>
-        <input id="icon" bind:value={icon} placeholder="😀 o https://…" />
-    </div>
-
-    <div class="field">
         <label for="type">Tipo</label>
         <select id="type" bind:value={type}>
             {#each actionTypes as t}
@@ -441,27 +400,6 @@
             {/each}
         </select>
     </div>
-
-    {#if locked}
-        <div class="field">
-            <label for="page">Página</label>
-            <div class="fixed-page">{lockedPageName}</div>
-        </div>
-    {:else}
-        <div class="field">
-            <label for="page">Página</label>
-            <select id="page" bind:value={page}>
-                {#each pages as p}
-                    <option value={p.id}>{p.icon} {p.name}</option>
-                {/each}
-            </select>
-        </div>
-
-        <div class="field">
-            <label for="position">Posición en la cuadrícula (vacío = sin asignar)</label>
-            <input id="position" bind:value={positionStr} placeholder="0, 1, 2… (0 = primera casilla)" inputmode="numeric" />
-        </div>
-    {/if}
 
     {#if isAppType}
         <div class="field">
@@ -542,6 +480,23 @@
         <div class="field">
             <label for="command">Command / Script</label>
             <textarea id="command" bind:value={command} placeholder="osascript -e 'tell application …'"></textarea>
+        </div>
+    {/if}
+
+    <div class="field">
+        <label for="label">Label</label>
+        <input id="label" value={label} on:input={onLabelInput} placeholder="Nombre visible" />
+    </div>
+
+    <div class="field">
+        <label for="icon">Icono (emoji o URL)</label>
+        <input id="icon" bind:value={icon} placeholder="😀 o https://…" />
+    </div>
+
+    {#if !locked}
+        <div class="field">
+            <label for="position">Posición en la cuadrícula (vacío = sin asignar)</label>
+            <input id="position" bind:value={positionStr} placeholder="0, 1, 2… (0 = primera casilla)" inputmode="numeric" />
         </div>
     {/if}
 
