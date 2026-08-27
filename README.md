@@ -46,7 +46,7 @@ Levanta ambos servicios desde la raíz:
 ./dev.sh
 ```
 
-Equivale a correr `go run .` en `backend/` y `pnpm dev` en `frontend/`.
+Equivale a correr `go run .` en `backend/` y `pnpm dev --host` en `frontend/`. El script detecta la IP local de tu Mac y muestra las URLs para conectarte desde una tablet o celular en la misma red (UI y API).
 
 ### Backend
 
@@ -69,10 +69,11 @@ Servidor en `http://localhost:8080/master-control`. Configuración vía `backend
 ```sh
 cd frontend
 pnpm install
-pnpm dev
+pnpm dev            # solo local (localhost)
+pnpm dev --host     # accesible desde otros dispositivos de la red
 ```
 
-La UI apunta a la API en `http://<host>:8080/master-control` (definido en `frontend/src/lib/api/api.ts`; sin proxy de Vite, el backend responde CORS para todos los orígenes).
+La UI apunta a la API en `http://<host>:8080/master-control` (definido en `frontend/src/lib/api/api.ts`; sin proxy de Vite, el backend responde CORS para todos los orígenes). Para usar la app desde una tablet/celular entra a `http://<IP-del-Mac>:5173`; la IP la muestra `./dev.sh`.
 
 ## API
 
