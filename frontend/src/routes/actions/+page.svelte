@@ -3,12 +3,20 @@
     import { getActions, deleteAction } from '$lib/api/actions';
     import type { Action } from '$lib/api/actions';
     import { goto } from '$app/navigation';
+    import Modal from '$lib/components/Modal.svelte';
+    import NewActionForm from '$lib/components/NewActionForm.svelte';
 
     let actions: Action[] = [];
+    let newAction = false;
 
     onMount(async () => {
         actions = await getActions();
     });
+
+    async function onNewSaved() {
+        newAction = false;
+        actions = await getActions();
+    }
 
     async function remove(id: string) {
         await deleteAction(id);
@@ -133,7 +141,7 @@
     <div class="header-row">
         <div class="title">Administrar acciones</div>
 
-        <button class="btn-create" on:click={() => goto('/actions/new')}>
+        <button class="btn-create" on:click={() => newAction = true}>
             Nueva acción
         </button>
     </div>
@@ -175,3 +183,12 @@
         </table>
     </div>
 </div>
+
+{#if newAction}
+    <Modal title="Nueva acción" onClose={() => newAction = false}>
+        <NewActionForm
+            pageId="general"
+            onSaved={onNewSaved}
+        />
+    </Modal>
+{/if}

@@ -11,6 +11,38 @@ Panel para controlar tu Mac desde el navegador: dispara acciones, hotkeys y apli
 - **Tipos de acción** (`action-types`) manejables vía API y sembrados al arrancar.
 - **Persistencia** en bbolt (base de datos embebida, un solo archivo).
 
+## Capturas
+
+### Panel principal
+
+Panel que agrupa las apps y acciones en una cuadrícula por página.
+
+![Panel principal](screenshots/dashboard.png)
+
+### Gestión de acciones
+
+Administra las acciones del Mac (abrir apps, ejecutar comandos o AppleScript, hotkeys).
+
+![Gestión de acciones](screenshots/actions.png)
+
+### Nueva acción
+
+Crea una acción desde un modal eligiendo su tipo (app, AppleScript, comando, hotkey o acción del sistema) y configuración.
+
+![Nueva acción](screenshots/actions-modal.png)
+
+### Páginas
+
+Crea y organiza páginas que agrupan tus acciones en la UI.
+
+![Páginas](screenshots/pages.png)
+
+### Nueva página
+
+Añade una página desde un modal definiendo nombre, icono y tamaño de la cuadrícula.
+
+![Nueva página](screenshots/pages-modal.png)
+
 ## Estructura
 
 ```
@@ -27,6 +59,7 @@ Panel para controlar tu Mac desde el navegador: dispara acciones, hotkeys y apli
 │       ├── lib/api/            # Cliente API (un archivo por recurso)
 │       ├── lib/components/     # ActionButton, HotkeyRecorder, ...
 │       └── routes/             # /actions, /pages, ...
+├── screenshots/                # Capturas de la UI para el README
 └── dev.sh                      # Levanta backend + frontend juntos
 ```
 

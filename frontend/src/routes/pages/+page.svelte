@@ -1,15 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { getPages, createPage, updatePage, deletePage } from '$lib/api/pages';
+    import { getPages, updatePage, deletePage } from '$lib/api/pages';
     import type { Page } from '$lib/api/pages';
     import { goto } from '$app/navigation';
+    import Modal from '$lib/components/Modal.svelte';
+    import NewPageForm from '$lib/components/NewPageForm.svelte';
 
     let pages: Page[] = [];
-    let id = "";
-    let name = "";
-    let icon = "";
-    let columns = 3;
-    let rows = 3;
+    let showNewPage = false;
     let editing: string | null = null;
     let editName = "";
     let editIcon = "";
@@ -20,11 +18,9 @@
         pages = (await getPages()).sort((a, b) => a.order - b.order);
     });
 
-    async function add() {
-        if (!id || !name) return;
-        await createPage({ id, name, icon, order: pages.length, columns, rows });
+    async function onNewPageSaved() {
+        showNewPage = false;
         pages = (await getPages()).sort((a, b) => a.order - b.order);
-        id = ""; name = ""; icon = ""; columns = 3; rows = 3;
     }
 
     function startEdit(p: Page) {
@@ -57,7 +53,33 @@
     h1 {
         font-size: 2rem;
         font-weight: 700;
+        margin-bottom: 0;
+    }
+
+    .header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-bottom: 24px;
+        gap: 20px;
+    }
+
+    .btn-create {
+        background: #1e1e1e;
+        border: 1px solid rgba(255,255,255,0.12);
+        padding: 10px 22px;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+        height: 42px;
+        display: flex;
+        align-items: center;
+    }
+
+    .btn-create:hover {
+        background: #2a2a2a;
     }
 
     .panel {
@@ -66,27 +88,6 @@
         border: 1px solid rgba(255,255,255,0.06);
         padding: 24px;
         margin-bottom: 24px;
-    }
-
-    .field {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 14px;
-    }
-
-    .field-row {
-        display: flex;
-        gap: 14px;
-    }
-
-    .field-row .field {
-        flex: 1;
-    }
-
-    label {
-        font-size: 0.85rem;
-        margin-bottom: 6px;
-        opacity: 0.8;
     }
 
     input {
@@ -152,32 +153,10 @@
 
 <div class="container">
     <button class="btn-back" on:click={() => goto('/')}>← Volver</button>
-    <h1>Páginas</h1>
 
-    <div class="panel">
-        <div class="field">
-            <label for="id">ID</label>
-            <input id="id" bind:value={id} placeholder="general" />
-        </div>
-        <div class="field">
-            <label for="name">Nombre</label>
-            <input id="name" bind:value={name} placeholder="General" />
-        </div>
-        <div class="field">
-            <label for="icon">Icono (emoji)</label>
-            <input id="icon" bind:value={icon} placeholder="✨" />
-        </div>
-        <div class="field-row">
-            <div class="field">
-                <label for="columns">Columnas</label>
-                <input id="columns" type="number" min="1" max="6" bind:value={columns} />
-            </div>
-            <div class="field">
-                <label for="rows">Filas</label>
-                <input id="rows" type="number" min="1" max="6" bind:value={rows} />
-            </div>
-        </div>
-        <button class="btn" on:click={add}>Añadir página</button>
+    <div class="header-row">
+        <h1>Páginas</h1>
+        <button class="btn-create" on:click={() => showNewPage = true}>Añadir página</button>
     </div>
 
     <div class="panel">
@@ -205,3 +184,9 @@
         {/if}
     </div>
 </div>
+
+{#if showNewPage}
+    <Modal title="Nueva página" onClose={() => showNewPage = false}>
+        <NewPageForm onSaved={onNewPageSaved} />
+    </Modal>
+{/if}

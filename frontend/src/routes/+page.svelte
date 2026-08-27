@@ -5,6 +5,7 @@
     import ActionPicker from '$lib/components/ActionPicker.svelte';
     import NewActionForm from '$lib/components/NewActionForm.svelte';
     import NewPageForm from '$lib/components/NewPageForm.svelte';
+    import Modal from '$lib/components/Modal.svelte';
     import { getActions, updateAction, deleteAction } from '$lib/api/actions';
     import { getPages, updatePage } from '$lib/api/pages';
     import type { Action } from '$lib/api/actions';
@@ -453,50 +454,6 @@
     .empty-btn:hover {
         background: #2a2a2a;
     }
-
-    .modal-overlay {
-        z-index: 60;
-    }
-
-    .new-modal {
-        width: 100%;
-        max-width: 600px;
-        max-height: 88vh;
-        display: flex;
-        flex-direction: column;
-        background: #161616;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 18px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-        overflow: hidden;
-    }
-
-    .new-modal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 24px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .new-modal-header h3 {
-        margin: 0;
-        font-size: 1.05rem;
-    }
-
-    .new-modal-close {
-        background: none;
-        border: none;
-        color: #aaa;
-        font-size: 1.2rem;
-        cursor: pointer;
-        padding: 4px;
-    }
-
-    .new-modal-body {
-        overflow-y: auto;
-        padding: 0 24px 24px;
-    }
 </style>
 
 <div class="container">
@@ -653,41 +610,17 @@
 {/if}
 
 {#if newAction}
-    <div
-        class="overlay modal-overlay"
-        role="presentation"
-        on:click={(e) => { if (e.target === e.currentTarget) newAction = null; }}
-    >
-        <div class="new-modal" role="dialog" aria-label="Nueva acción">
-            <div class="new-modal-header">
-                <h3>Nueva acción</h3>
-                <button class="new-modal-close" aria-label="Cerrar" on:click={() => newAction = null}>✕</button>
-            </div>
-            <div class="new-modal-body">
-                <NewActionForm
-                    pageId={newAction.page.id}
-                    position={newAction.slot}
-                    onSaved={onNewSaved}
-                />
-            </div>
-        </div>
-    </div>
+    <Modal title="Nueva acción" onClose={() => newAction = null}>
+        <NewActionForm
+            pageId={newAction.page.id}
+            position={newAction.slot}
+            onSaved={onNewSaved}
+        />
+    </Modal>
 {/if}
 
 {#if newPage}
-    <div
-        class="overlay modal-overlay"
-        role="presentation"
-        on:click={(e) => { if (e.target === e.currentTarget) newPage = false; }}
-    >
-        <div class="new-modal" role="dialog" aria-label="Nueva página">
-            <div class="new-modal-header">
-                <h3>Nueva página</h3>
-                <button class="new-modal-close" aria-label="Cerrar" on:click={() => newPage = false}>✕</button>
-            </div>
-            <div class="new-modal-body">
-                <NewPageForm onSaved={onNewPageSaved} />
-            </div>
-        </div>
-    </div>
+    <Modal title="Nueva página" onClose={() => newPage = false}>
+        <NewPageForm onSaved={onNewPageSaved} />
+    </Modal>
 {/if}
