@@ -8,9 +8,13 @@
     let id = "";
     let name = "";
     let icon = "";
+    let columns = 3;
+    let rows = 3;
     let editing: string | null = null;
     let editName = "";
     let editIcon = "";
+    let editColumns = 3;
+    let editRows = 3;
 
     onMount(async () => {
         pages = (await getPages()).sort((a, b) => a.order - b.order);
@@ -18,19 +22,21 @@
 
     async function add() {
         if (!id || !name) return;
-        await createPage({ id, name, icon, order: pages.length });
+        await createPage({ id, name, icon, order: pages.length, columns, rows });
         pages = (await getPages()).sort((a, b) => a.order - b.order);
-        id = ""; name = ""; icon = "";
+        id = ""; name = ""; icon = ""; columns = 3; rows = 3;
     }
 
     function startEdit(p: Page) {
         editing = p.id;
         editName = p.name;
         editIcon = p.icon ?? "";
+        editColumns = p.columns || 3;
+        editRows = p.rows || 3;
     }
 
     async function saveEdit(p: Page) {
-        await updatePage({ ...p, name: editName, icon: editIcon });
+        await updatePage({ ...p, name: editName, icon: editIcon, columns: editColumns, rows: editRows });
         editing = null;
         pages = (await getPages()).sort((a, b) => a.order - b.order);
     }
@@ -66,6 +72,15 @@
         display: flex;
         flex-direction: column;
         margin-bottom: 14px;
+    }
+
+    .field-row {
+        display: flex;
+        gap: 14px;
+    }
+
+    .field-row .field {
+        flex: 1;
     }
 
     label {
@@ -152,6 +167,16 @@
             <label for="icon">Icono (emoji)</label>
             <input id="icon" bind:value={icon} placeholder="✨" />
         </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="columns">Columnas</label>
+                <input id="columns" type="number" min="1" max="6" bind:value={columns} />
+            </div>
+            <div class="field">
+                <label for="rows">Filas</label>
+                <input id="rows" type="number" min="1" max="6" bind:value={rows} />
+            </div>
+        </div>
         <button class="btn" on:click={add}>Añadir página</button>
     </div>
 
@@ -165,9 +190,13 @@
                     {#if editing === p.id}
                         <input bind:value={editName} placeholder="Nombre" />
                         <input bind:value={editIcon} placeholder="Icono" style="width:80px" />
+                        <input type="number" min="1" max="6" bind:value={editColumns} style="width:70px" aria-label="Columnas" />
+                        <span style="opacity:0.5">×</span>
+                        <input type="number" min="1" max="6" bind:value={editRows} style="width:70px" aria-label="Filas" />
                         <button class="btn" on:click={() => saveEdit(p)}>Guardar</button>
                     {:else}
                         <span class="page-name">{p.name}</span>
+                        <span style="opacity:0.5;font-size:0.85rem">{p.columns || 3}×{p.rows || 3}</span>
                         <button class="btn" on:click={() => startEdit(p)}>Editar</button>
                         <button class="btn" on:click={() => remove(p)}>Eliminar</button>
                     {/if}

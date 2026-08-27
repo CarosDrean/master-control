@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
+    import { page as pageStore } from '$app/stores';
     import {createAction, updateAction} from '$lib/api/actions';
     import { getActionTypes } from '$lib/api/actiontypes';
     import type { ActionType } from '$lib/api/actiontypes';
@@ -22,6 +23,7 @@
     let systemOpen = false;
     let type = "";
     let page = "general";
+    let positionStr = "";
     let id = "";
     let idAuto = true;
     let label = "";
@@ -112,6 +114,16 @@
         if (pages.length > 0) {
             page = pages[0].id;
         }
+
+        const params = $pageStore.url.searchParams;
+        const pageParam = params.get('page');
+        if (pageParam && pages.some(p => p.id === pageParam)) {
+            page = pageParam;
+        }
+        const positionParam = params.get('position');
+        if (positionParam !== null) {
+            positionStr = positionParam;
+        }
     });
 
     let message = "";
@@ -139,7 +151,8 @@
                 type,
                 command,
                 icon,
-                page
+                page,
+                position: positionStr === "" ? -1 : parseInt(positionStr, 10)
             });
 
             if (res.success) {
@@ -454,6 +467,11 @@
                     <option value={p.id}>{p.icon} {p.name}</option>
                 {/each}
             </select>
+        </div>
+
+        <div class="field">
+            <label for="position">Posición en la cuadrícula (vacío = sin asignar)</label>
+            <input id="position" bind:value={positionStr} placeholder="0, 1, 2… (0 = primera casilla)" inputmode="numeric" />
         </div>
 
         {#if isAppType}

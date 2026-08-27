@@ -7,6 +7,7 @@ export interface Action {
     type: string;
     command: string;
     page?: string;
+    position?: number;
 }
 
 const BASE_URL = getApiBase();

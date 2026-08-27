@@ -5,6 +5,8 @@ export interface Page {
     name: string;
     icon?: string;
     order: number;
+    columns?: number;
+    rows?: number;
 }
 
 const BASE_URL = getApiBase();

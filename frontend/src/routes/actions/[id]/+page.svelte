@@ -31,6 +31,7 @@ import { getAction, updateAction } from '$lib/api/actions';
     let command = "";
     let icon = "";
     let page = "general";
+    let positionStr = "";
 
     let message = "";
     let messageType: "success" | "error" | "" = "";
@@ -89,6 +90,7 @@ import { getAction, updateAction } from '$lib/api/actions';
         command = action.command;
         icon = action.icon ?? "";
         page = action.page ?? "general";
+        positionStr = action.position !== undefined && action.position >= 0 ? String(action.position) : "";
     });
 
     async function save() {
@@ -99,7 +101,8 @@ import { getAction, updateAction } from '$lib/api/actions';
                 type,
                 command,
                 icon,
-                page
+                page,
+                position: positionStr === "" ? -1 : parseInt(positionStr, 10)
             });
 
             if (res.success) {
@@ -418,6 +421,11 @@ import { getAction, updateAction } from '$lib/api/actions';
                     <option value={p.id}>{p.icon} {p.name}</option>
                 {/each}
             </select>
+        </div>
+
+        <div class="field">
+            <label for="position-edit">Posición en la cuadrícula (vacío = sin asignar)</label>
+            <input id="position-edit" bind:value={positionStr} placeholder="0, 1, 2… (0 = primera casilla)" inputmode="numeric" />
         </div>
 
         {#if isAppType}

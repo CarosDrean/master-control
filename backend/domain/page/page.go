@@ -25,6 +25,12 @@ func New(repository Repository) *Page {
 }
 
 func (p *Page) Set(ctx context.Context, page model.Page) error {
+	if page.Columns <= 0 {
+		page.Columns = 3
+	}
+	if page.Rows <= 0 {
+		page.Rows = 3
+	}
 	return p.repository.Set(ctx, page)
 }
 

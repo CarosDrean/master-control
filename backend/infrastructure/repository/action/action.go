@@ -1,6 +1,7 @@
 package action
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -38,6 +39,16 @@ func (a *Action) Set(ctx context.Context, action model.Action) error {
 	})
 }
 
+// unassignedPosition is used for actions without a slot assigned.
+const unassignedPosition = -1
+
+func normalizePosition(action model.Action, v []byte) model.Action {
+	if !bytes.Contains(v, []byte(`"position"`)) {
+		action.Position = unassignedPosition
+	}
+	return action
+}
+
 func (a *Action) GetAll(ctx context.Context) ([]model.Action, error) {
 	var actions []model.Action
 	err := a.db.View(func(tx *bbolt.Tx) error {
@@ -53,7 +64,7 @@ func (a *Action) GetAll(ctx context.Context) ([]model.Action, error) {
 				return err
 			}
 
-			actions = append(actions, action)
+			actions = append(actions, normalizePosition(action, v))
 			return nil
 		})
 	})
@@ -63,6 +74,7 @@ func (a *Action) GetAll(ctx context.Context) ([]model.Action, error) {
 
 func (a *Action) Get(ctx context.Context, id string) (model.Action, error) {
 	var action model.Action
+	var raw []byte
 	err := a.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(a.bucketName))
 		if b == nil {
@@ -74,10 +86,11 @@ func (a *Action) Get(ctx context.Context, id string) (model.Action, error) {
 			return errors.New("action not found")
 		}
 
-		return json.Unmarshal(v, &action)
+		raw = append(raw, v...)
+		return json.Unmarshal(raw, &action)
 	})
 
-	return action, err
+	return normalizePosition(action, raw), err
 }
 
 func (a *Action) Delete(ctx context.Context, id string) error {

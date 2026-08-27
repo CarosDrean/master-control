@@ -12,10 +12,12 @@ import (
 
 var defaults = []model.Page{
 	{
-		ID:    "general",
-		Name:  "General",
-		Icon:  "✨",
-		Order: 0,
+		ID:      "general",
+		Name:    "General",
+		Icon:    "✨",
+		Order:   0,
+		Columns: 3,
+		Rows:    3,
 	},
 }
 
