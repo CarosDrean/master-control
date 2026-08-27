@@ -77,7 +77,7 @@ func (a *ActionType) Set(ctx context.Context, actionType model.ActionType) error
 }
 
 func (a *ActionType) GetAll(ctx context.Context) ([]model.ActionType, error) {
-	var actionTypes []model.ActionType
+	actionTypes := []model.ActionType{}
 	err := a.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(a.bucketName))
 		if b == nil {

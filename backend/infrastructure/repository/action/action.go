@@ -50,7 +50,7 @@ func normalizePosition(action model.Action, v []byte) model.Action {
 }
 
 func (a *Action) GetAll(ctx context.Context) ([]model.Action, error) {
-	var actions []model.Action
+	actions := []model.Action{}
 	err := a.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(a.bucketName))
 		if b == nil {

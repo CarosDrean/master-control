@@ -50,7 +50,7 @@ func (p *Page) Set(ctx context.Context, page model.Page) error {
 }
 
 func (p *Page) GetAll(ctx context.Context) ([]model.Page, error) {
-	var pages []model.Page
+	pages := []model.Page{}
 	err := p.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket([]byte(p.bucketName))
 		if b == nil {

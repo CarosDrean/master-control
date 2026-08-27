@@ -3,6 +3,8 @@
     import { goto } from '$app/navigation';
     import ActionButton from '$lib/components/ActionButton.svelte';
     import ActionPicker from '$lib/components/ActionPicker.svelte';
+    import NewActionForm from '$lib/components/NewActionForm.svelte';
+    import NewPageForm from '$lib/components/NewPageForm.svelte';
     import { getActions, updateAction, deleteAction } from '$lib/api/actions';
     import { getPages, updatePage } from '$lib/api/pages';
     import type { Action } from '$lib/api/actions';
@@ -13,8 +15,12 @@
     let currentPage = 0;
     let loading = true;
     let picker: { page: Page; slot: number } | null = null;
+    let newAction: { page: Page; slot: number } | null = null;
+    let newPage = false;
     let menu: { page: Page; slot: number; action: Action } | null = null;
     let settings: Page | null = null;
+    let settingsName = "";
+    let settingsIcon = "";
     let settingsColumns = 3;
     let settingsRows = 3;
 
@@ -137,18 +143,32 @@
         if (!picker) return;
         const target = picker;
         picker = null;
-        goto(`/actions/new?page=${target.page.id}&position=${target.slot}`);
+        newAction = { page: target.page, slot: target.slot };
+    }
+
+    async function onNewSaved() {
+        newAction = null;
+        actions = await getActions();
+        fillFreeSlots();
+    }
+
+    async function onNewPageSaved() {
+        newPage = false;
+        pages = (await getPages()).sort((a, b) => a.order - b.order);
+        fillFreeSlots();
     }
 
     function openSettings(p: Page) {
         settings = p;
+        settingsName = p.name;
+        settingsIcon = p.icon ?? "";
         settingsColumns = p.columns || 3;
         settingsRows = p.rows || 3;
     }
 
     async function saveSettings() {
         if (!settings) return;
-        await updatePage({ ...settings, columns: settingsColumns, rows: settingsRows });
+        await updatePage({ ...settings, name: settingsName, icon: settingsIcon, columns: settingsColumns, rows: settingsRows });
         pages = (await getPages()).sort((a, b) => a.order - b.order);
         settings = null;
         fillFreeSlots();
@@ -409,6 +429,13 @@
         color: white;
         font-size: 0.95rem;
         outline: none;
+        width: 100%;
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    .settings-row input#settings-icon {
+        max-width: 96px;
     }
 
     .empty-btn {
@@ -426,6 +453,50 @@
     .empty-btn:hover {
         background: #2a2a2a;
     }
+
+    .modal-overlay {
+        z-index: 60;
+    }
+
+    .new-modal {
+        width: 100%;
+        max-width: 600px;
+        max-height: 88vh;
+        display: flex;
+        flex-direction: column;
+        background: #161616;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        overflow: hidden;
+    }
+
+    .new-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .new-modal-header h3 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .new-modal-close {
+        background: none;
+        border: none;
+        color: #aaa;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    .new-modal-body {
+        overflow-y: auto;
+        padding: 0 24px 24px;
+    }
 </style>
 
 <div class="container">
@@ -434,10 +505,11 @@
     {:else if pages.length === 0}
         <div class="empty">
             No hay páginas todavía.
-            <button class="empty-btn" on:click={() => goto('/pages')}>＋ Crear primera página</button>
+            <button class="empty-btn" on:click={() => newPage = true}>＋ Crear primera página</button>
         </div>
     {:else}
         <div class="carousel" on:scroll={onScroll}>
+            {#key actions}
             {#each pages as p, i}
                 {@const total = gridSlots(p)}
                 {@const cols = gridCols(p)}
@@ -487,9 +559,10 @@
                     {/if}
                 </section>
             {/each}
+            {/key}
 
             <section class="add-page">
-                <button type="button" class="add-page-btn" on:click={() => goto('/pages')} aria-label="Nueva página">
+                <button type="button" class="add-page-btn" on:click={() => newPage = true} aria-label="Nueva página">
                     +
                 </button>
             </section>
@@ -553,7 +626,17 @@
         on:keydown={(e) => { if (e.key === 'Escape' || e.key === 'Enter') settings = null; }}
     >
         <div class="menu-modal" role="presentation" on:click|stopPropagation>
-            <h3>Configurar página: {settings.name}</h3>
+            <h3>Configurar página: {settingsName}</h3>
+            <div class="settings-row">
+                <div class="field">
+                    <label for="settings-name">Nombre</label>
+                    <input id="settings-name" bind:value={settingsName} />
+                </div>
+                <div class="field">
+                    <label for="settings-icon">Icono (emoji)</label>
+                    <input id="settings-icon" bind:value={settingsIcon} />
+                </div>
+            </div>
             <div class="settings-row">
                 <div class="field">
                     <label for="settings-cols">Columnas</label>
@@ -565,6 +648,46 @@
                 </div>
             </div>
             <button class="menu-btn" on:click={saveSettings}>Guardar</button>
+        </div>
+    </div>
+{/if}
+
+{#if newAction}
+    <div
+        class="overlay modal-overlay"
+        role="presentation"
+        on:click={(e) => { if (e.target === e.currentTarget) newAction = null; }}
+    >
+        <div class="new-modal" role="dialog" aria-label="Nueva acción">
+            <div class="new-modal-header">
+                <h3>Nueva acción</h3>
+                <button class="new-modal-close" aria-label="Cerrar" on:click={() => newAction = null}>✕</button>
+            </div>
+            <div class="new-modal-body">
+                <NewActionForm
+                    pageId={newAction.page.id}
+                    position={newAction.slot}
+                    onSaved={onNewSaved}
+                />
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if newPage}
+    <div
+        class="overlay modal-overlay"
+        role="presentation"
+        on:click={(e) => { if (e.target === e.currentTarget) newPage = false; }}
+    >
+        <div class="new-modal" role="dialog" aria-label="Nueva página">
+            <div class="new-modal-header">
+                <h3>Nueva página</h3>
+                <button class="new-modal-close" aria-label="Cerrar" on:click={() => newPage = false}>✕</button>
+            </div>
+            <div class="new-modal-body">
+                <NewPageForm onSaved={onNewPageSaved} />
+            </div>
         </div>
     </div>
 {/if}
