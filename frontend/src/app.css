@@ -1,3 +1,9 @@
+:root {
+    /* Tamaño de los botones de la cuadrícula y separación entre ellos (inicio y cajón de app). */
+    --tile: 118px;
+    --tile-gap: 22px;
+}
+
 html, body {
     margin: 0;
     padding: 0;

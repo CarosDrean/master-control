@@ -1,4 +1,4 @@
-import { getApiBase } from './api';
+import { apiFetch } from './api';
 
 export interface ActionType {
     id: string;
@@ -8,20 +8,18 @@ export interface ActionType {
     command_template: string;
 }
 
-const BASE_URL = getApiBase();
-
 export async function getActionTypes(): Promise<ActionType[]> {
-    const res = await fetch(`${BASE_URL}/action-types`);
+    const res = await apiFetch(`/action-types`);
     return res.json();
 }
 
 export async function getActionType(id: string): Promise<ActionType> {
-    const res = await fetch(`${BASE_URL}/action-types/${id}`);
+    const res = await apiFetch(`/action-types/${id}`);
     return res.json();
 }
 
 export async function createActionType(a: ActionType): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${BASE_URL}/action-types`, {
+    const res = await apiFetch(`/action-types`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(a)
@@ -49,7 +47,7 @@ export async function createActionType(a: ActionType): Promise<{ success: boolea
 }
 
 export async function updateActionType(a: ActionType): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${BASE_URL}/action-types/${a.id}`, {
+    const res = await apiFetch(`/action-types/${a.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(a)
@@ -78,7 +76,7 @@ export async function updateActionType(a: ActionType): Promise<{ success: boolea
 
 
 export async function deleteActionType(id: string): Promise<void> {
-    await fetch(`${BASE_URL}/action-types/${id}`, {
+    await apiFetch(`/action-types/${id}`, {
         method: "DELETE"
     });
 }

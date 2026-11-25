@@ -1,5 +1,5 @@
-import { getApiBase } from './api';
-import { executeAction, type Action } from './actions';
+import { apiFetch } from './api';
+import { executeAction, type Action, type ExecutionResult } from './actions';
 import { showSystemHud } from '$lib/hud';
 
 export interface SystemAction {
@@ -19,25 +19,23 @@ export interface SystemBrightness {
     brightness: number;
 }
 
-const BASE_URL = getApiBase();
-
 export async function getSystemActions(): Promise<SystemAction[]> {
-    const res = await fetch(`${BASE_URL}/system/actions`);
+    const res = await apiFetch(`/system/actions`);
     return res.json();
 }
 
 export async function getSystemVolume(): Promise<SystemVolume> {
-    const res = await fetch(`${BASE_URL}/system/volume`);
+    const res = await apiFetch(`/system/volume`);
     return res.json();
 }
 
 export async function getSystemBrightness(): Promise<SystemBrightness> {
-    const res = await fetch(`${BASE_URL}/system/brightness`);
+    const res = await apiFetch(`/system/brightness`);
     return res.json();
 }
 
 export async function setSystemVolume(volume: number): Promise<void> {
-    await fetch(`${BASE_URL}/system/volume`, {
+    await apiFetch(`/system/volume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ volume })
@@ -45,17 +43,17 @@ export async function setSystemVolume(volume: number): Promise<void> {
 }
 
 export async function setSystemBrightness(brightness: number): Promise<void> {
-    await fetch(`${BASE_URL}/system/brightness`, {
+    await apiFetch(`/system/brightness`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brightness })
     });
 }
 
-export async function executeSystemActionWithFeedback(action: Action): Promise<void> {
-    await executeAction(action.id);
+export async function executeSystemActionWithFeedback(action: Action): Promise<ExecutionResult> {
+    const result = await executeAction(action.id);
 
-    if (action.type !== "system") return;
+    if (action.type !== "system" || !result.ok) return result;
 
     const category: "volume" | "brightness" | "media" = action.command.startsWith("volume")
         ? "volume"
@@ -80,4 +78,28 @@ export async function executeSystemActionWithFeedback(action: Action): Promise<v
     }
 
     showSystemHud({ icon: action.icon ?? "⚙️", label: action.label, category, value, muted });
+
+    return result;
+}
+
+export type ScrollResult = { ok: true } | { ok: false; status: number; error: string };
+
+/**
+ * Desplaza la ventana de la Mac que está bajo el puntero, en píxeles.
+ * Positivo = hacia arriba / izquierda (convención de la rueda de CoreGraphics).
+ */
+export async function scrollBy(dx: number, dy: number): Promise<ScrollResult> {
+    const res = await apiFetch(`/system/scroll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dx: Math.round(dx), dy: Math.round(dy) })
+    });
+    if (res.ok) return { ok: true };
+    let error = `HTTP ${res.status}`;
+    try {
+        error = (await res.json()).error ?? error;
+    } catch {
+        // cuerpo vacío o no JSON
+    }
+    return { ok: false, status: res.status, error };
 }

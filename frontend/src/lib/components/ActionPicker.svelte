@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { authUrl } from '$lib/api/api';
     import type { Action } from '$lib/api/actions';
 
     export let actions: Action[] = [];
@@ -171,7 +172,7 @@
                 {#each filtered as a}
                     <button type="button" class="item" on:click={() => onSelect(a)}>
                         {#if isImage(a.icon)}
-                            <img src={a.icon} alt={a.label} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                            <img src={authUrl(a.icon)} alt={a.label} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                         {:else}
                             <span class="emoji">{a.icon}</span>
                         {/if}

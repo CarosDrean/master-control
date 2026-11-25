@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { authUrl } from '$lib/api/api';
     import { onMount } from 'svelte';
     import { getActions, deleteAction } from '$lib/api/actions';
     import type { Action } from '$lib/api/actions';
@@ -165,7 +166,7 @@
                     <td>{a.id}</td>
                     <td>
                         {#if isImage(a.icon)}
-                            <img class="row-icon" src={a.icon} alt={a.label} />
+                            <img class="row-icon" src={authUrl(a.icon)} alt={a.label} />
                         {:else}
                             <span class="row-emoji">{a.icon}</span>
                         {/if}

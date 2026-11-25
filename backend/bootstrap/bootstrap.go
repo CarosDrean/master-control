@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -15,6 +16,7 @@ import (
 	"master-control/domain/actiontype"
 	"master-control/domain/page"
 	"master-control/infrastructure/handler"
+	"master-control/infrastructure/middleware"
 	actionRepository "master-control/infrastructure/repository/action"
 	actiontypeRepository "master-control/infrastructure/repository/actiontype"
 	pageRepository "master-control/infrastructure/repository/page"
@@ -34,6 +36,11 @@ func Run() {
 
 	appName := os.Getenv("APP_NAME")
 
+	cfg, err := loadConfig(getenv)
+	if err != nil {
+		log.Fatal().Err(err).Msg("invalid configuration")
+	}
+
 	db, err := newBbolt()
 	if err != nil {
 		log.Fatal().Err(err).Msg("initialize bbolt failed")
@@ -42,14 +49,11 @@ func Run() {
 
 	api := gin.New()
 	api.Use(gin.Recovery())
-	api.Use(gin.Logger())
-	api.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		AllowCredentials: false,
-	}))
+	// El scroll táctil llega varias veces por segundo.
+	api.Use(middleware.Logger(path.Join("/", appName, "system/scroll")))
+	api.Use(cors.New(corsConfig(cfg)))
 	apiGroup := api.Group(appName)
+	apiGroup.Use(middleware.Auth(cfg.Token, healthPath(appName)))
 
 	actionTypeRepo := actiontypeRepository.New(db)
 	if err := actionTypeRepo.Seed(ctx); err != nil {
@@ -69,7 +73,7 @@ func Run() {
 	handler.InitRoutes(model.RouterSpecification{
 		Api: apiGroup,
 		Dependencies: model.Dependencies{
-			ActionUseCase:     action.New(actionRepository.New(db), actionTypeUseCase, systemController),
+			ActionUseCase:     action.New(actionRepository.New(db), actionTypeUseCase, systemController, cfg.MaxTimeout),
 			ActionTypeUseCase: actionTypeUseCase,
 			PageUseCase:       pageUseCase,
 			SystemUseCase:     systemController,
@@ -77,14 +81,42 @@ func Run() {
 	})
 
 	server := &http.Server{
-		Addr:         ":8080",
-		Handler:      api,
-		WriteTimeout: 15 * time.Second,
+		Addr:    cfg.Addr(),
+		Handler: api,
+		// La escritura debe sobrevivir a la acción más larga permitida (y a la captura de hotkey, 15 s).
+		WriteTimeout: max(cfg.MaxTimeout, 15*time.Second) + 10*time.Second,
 		ReadTimeout:  15 * time.Second,
+	}
+
+	if cfg.TokenGenerated {
+		log.Warn().Msgf("MC_TOKEN vacío: token efímero para esta ejecución: %s (define MC_TOKEN en backend/.env para fijarlo)", cfg.Token)
+	}
+	if len(cfg.AllowedOrigins) == 0 {
+		log.Warn().Msg("MC_ALLOWED_ORIGINS vacío: se aceptan todos los orígenes (el token sigue siendo obligatorio)")
 	}
 
 	log.Info().Msgf("Starting server at %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal().Err(err).Msg("error starting server")
 	}
+}
+
+// healthPath es la ruta completa del health check, la única pública.
+func healthPath(appName string) string {
+	return path.Join("/", appName, "health")
+}
+
+// corsConfig restringe los orígenes a MC_ALLOWED_ORIGINS; vacío = todos (con token obligatorio).
+func corsConfig(cfg Config) cors.Config {
+	c := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: false,
+	}
+	if len(cfg.AllowedOrigins) == 0 {
+		c.AllowAllOrigins = true
+	} else {
+		c.AllowOrigins = cfg.AllowedOrigins
+	}
+	return c
 }

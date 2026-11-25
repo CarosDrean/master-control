@@ -27,3 +27,6 @@ func setVolume(_ context.Context, _ int) error {
 func setBrightness(_ context.Context, _ float64) error {
 	return ErrNotSupported
 }
+func postScroll(_, _ int) error {
+	return ErrNotSupported
+}

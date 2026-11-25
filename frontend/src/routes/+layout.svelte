@@ -2,6 +2,13 @@
     import '../app.css';
     import { goto } from '$app/navigation';
     import SystemHud from '$lib/components/SystemHud.svelte';
+    import ActionFeedback from '$lib/components/ActionFeedback.svelte';
+    import TokenGate from '$lib/components/TokenGate.svelte';
+    import { onMount } from 'svelte';
+    import { keepAwake } from '$lib/keepAwake';
+
+    // La pantalla no se apaga mientras Master Control está abierto.
+    onMount(keepAwake);
 </script>
 
 <style>
@@ -35,6 +42,16 @@
         padding: 0;
     }
 
+    .nav {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #1f1f1f;
+    }
+
     main {
         padding: 0;
         height: calc(100dvh - 61px);
@@ -48,10 +65,14 @@
             Master Control
         </button>
     </div>
+    <a class="nav" href="/scroll">↕ Scroll</a>
 </header>
 
 <main>
-    <slot />
+    <TokenGate>
+        <slot />
+    </TokenGate>
 </main>
 
 <SystemHud />
+<ActionFeedback />

@@ -10,7 +10,7 @@ import (
 )
 
 type useCase interface {
-	Execute(ctx context.Context, id string) error
+	Execute(ctx context.Context, id string) (model.ExecutionResult, error)
 	Set(ctx context.Context, action model.Action) error
 	GetAll(ctx context.Context) ([]model.Action, error)
 	Get(ctx context.Context, id string) (model.Action, error)
@@ -29,12 +29,14 @@ func newHandler(useCase useCase) handler {
 
 func (h handler) execute(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.useCase.Execute(c.Request.Context(), id); err != nil {
+	result, err := h.useCase.Execute(c.Request.Context(), id)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.Error{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, model.Message{Message: "success"})
+	// Un exit code distinto de cero no es un error del servidor: viaja en el resultado.
+	c.JSON(http.StatusOK, result)
 }
 
 func (h handler) set(c *gin.Context) {

@@ -7,7 +7,8 @@
     import NewPageForm from '$lib/components/NewPageForm.svelte';
     import Modal from '$lib/components/Modal.svelte';
     import { getActions, updateAction, deleteAction } from '$lib/api/actions';
-    import { getPages, updatePage } from '$lib/api/pages';
+    import { getPages, updatePage, createPage } from '$lib/api/pages';
+    import { getApps, type App } from '$lib/api/apps';
     import type { Action } from '$lib/api/actions';
     import type { Page } from '$lib/api/pages';
 
@@ -24,6 +25,54 @@
     let settingsIcon = "";
     let settingsColumns = 3;
     let settingsRows = 3;
+    let settingsApp = "";
+    let installedApps: App[] = [];
+
+    // ── Cajón de una app ──────────────────────────────────────────────────
+    // Tocar el botón de una app la abre en la Mac y despliega, al costado de la cuadrícula, las acciones
+    // de esa app: las de la página vinculada a ella (Page.app). Esas páginas no salen en el
+    // carrusel: son el "detalle" de su app.
+    let expanded: { page: string; slot: number; app: string; label: string } | null = null;
+
+    $: visiblePages = pages.filter(p => !p.app);
+    // Una app puede tener varias páginas de acciones: el cajón las pasa deslizando.
+    const appPages = (app: string) => pages.filter(p => p.app === app).sort((a, b) => a.order - b.order);
+
+    let drawerEl: HTMLElement | null = null;
+    let drawerIndex = 0;
+
+    function toggleDrawer(p: Page, slot: number, a: Action) {
+        const same = expanded && expanded.page === p.id && expanded.slot === slot;
+        expanded = same ? null : { page: p.id, slot, app: a.command, label: a.label };
+        drawerIndex = 0;
+    }
+
+    function onDrawerScroll() {
+        if (drawerEl) drawerIndex = Math.round(drawerEl.scrollLeft / drawerEl.clientWidth);
+    }
+
+    function drawerTo(index: number) {
+        drawerEl?.scrollTo({ left: index * drawerEl.clientWidth, behavior: 'smooth' });
+    }
+
+    async function createAppPage() {
+        if (!expanded) return;
+        const { app, label } = expanded;
+        const slug = app.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+        const existing = appPages(app);
+        const n = existing.length + 1;
+        let id = n === 1 ? `app_${slug}` : `app_${slug}_${n}`;
+        while (pages.some(x => x.id === id)) id += "_";
+        const order = Math.max(0, ...pages.map(x => x.order)) + 1;
+        const cols = existing[0]?.columns || 3;
+        const rows = existing[0]?.rows || 3;
+        await createPage({ id, name: n === 1 ? label : `${label} ${n}`, icon: "", order, columns: cols, rows, app });
+        pages = (await getPages()).sort((a, b) => a.order - b.order);
+        fillFreeSlots();
+        // Mostrar la página recién creada.
+        setTimeout(() => drawerTo(existing.length), 0);
+    }
+
 
     const gridCols = (p: Page) => p.columns || 3;
     const gridSlots = (p: Page) => (p.columns || 3) * (p.rows || 3);
@@ -165,11 +214,15 @@
         settingsIcon = p.icon ?? "";
         settingsColumns = p.columns || 3;
         settingsRows = p.rows || 3;
+        settingsApp = p.app ?? "";
+        if (installedApps.length === 0) {
+            getApps().then(list => installedApps = list.sort((a, b) => a.name.localeCompare(b.name))).catch(() => {});
+        }
     }
 
     async function saveSettings() {
         if (!settings) return;
-        await updatePage({ ...settings, name: settingsName, icon: settingsIcon, columns: settingsColumns, rows: settingsRows });
+        await updatePage({ ...settings, name: settingsName, icon: settingsIcon, columns: settingsColumns, rows: settingsRows, app: settingsApp || undefined });
         pages = (await getPages()).sort((a, b) => a.order - b.order);
         settings = null;
         fillFreeSlots();
@@ -208,11 +261,14 @@
         box-sizing: border-box;
     }
 
+    /* El título de la página y la cabecera del cajón miden lo mismo (--head-h + margen),
+       así las filas de botones de ambos lados quedan a la misma altura. */
     .page-title {
         text-align: center;
         font-size: 1.1rem;
         opacity: 0.85;
-        margin: 0 0 20px;
+        height: var(--head-h);
+        margin: 0 0 var(--head-gap);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -256,19 +312,132 @@
         opacity: 0.5;
     }
 
+    /* Cuadrícula y cajón lado a lado; si no caben (iPad en vertical), el cajón baja. */
+    .page-body {
+        --head-h: 32px;
+        --head-gap: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        gap: var(--tile-gap);
+    }
+
+    .page-main > .grid {
+        margin: 0;
+    }
+
+    /* Alineado con la página: el cajón sube lo que mide su padding, así su cabecera queda a la
+       altura del título y sus filas de botones a la de las filas de apps (mismo gap). */
+    .drawer {
+        margin-top: -16px;
+        padding: 16px;
+        border-radius: 24px;
+        background: rgba(120, 180, 255, 0.05);
+        border: 1px solid rgba(120, 180, 255, 0.25);
+        animation: drawer-in 0.18s ease-out;
+    }
+
+    @keyframes drawer-in {
+        from { opacity: 0; transform: translateX(-12px); }
+        to { opacity: 1; transform: none; }
+    }
+
+    .drawer .grid {
+        gap: var(--tile-gap);
+    }
+
+    /* Páginas del cajón: deslizables con snap, del ancho de una cuadrícula. */
+    .drawer-carousel {
+        display: flex;
+        width: calc(var(--dcols) * var(--tile) + (var(--dcols) - 1) * var(--tile-gap));
+        max-width: calc(100vw - 64px);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .drawer-carousel::-webkit-scrollbar {
+        display: none;
+    }
+
+    .drawer-page {
+        flex: 0 0 100%;
+        scroll-snap-align: start;
+        /* Que la sombra de los botones de una página no asome en el borde de la vecina;
+           el padding/margin de abajo deja ver la sombra inferior sin mover el layout. */
+        overflow: hidden;
+        padding-bottom: 16px;
+        margin-bottom: -16px;
+    }
+
+    .drawer-page .grid {
+        margin: 0;
+    }
+
+    .drawer-add {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: var(--tile);
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.45);
+    }
+
+    .drawer-dots {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+        margin-top: 14px;
+    }
+
+    .drawer-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: var(--head-h);
+        margin-bottom: var(--head-gap);
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .drawer-head span {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .drawer-btn {
+        width: var(--head-h);
+        height: var(--head-h);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.15);
+        background: #1a1a1a;
+        color: rgba(255,255,255,0.8);
+        font-size: 1rem;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
     .grid {
         display: grid;
         grid-template-columns: repeat(var(--cols), 1fr);
-        gap: 28px;
+        gap: var(--tile-gap);
         justify-items: center;
         align-content: start;
-        max-width: min(900px, calc(var(--cols) * 140px + (var(--cols) - 1) * 28px));
+        max-width: min(900px, calc(var(--cols) * var(--tile) + (var(--cols) - 1) * var(--tile-gap)));
         margin: 0 auto;
     }
 
     .slot {
-        width: 140px;
-        height: 140px;
+        width: var(--tile);
+        height: var(--tile);
         border-radius: 22px;
         border: 2px dashed rgba(255,255,255,0.18);
         background: rgba(255,255,255,0.02);
@@ -435,6 +604,28 @@
         min-width: 0;
     }
 
+    .menu-modal > .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .menu-modal > .field label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    .menu-modal > .field select {
+        background: #1f1f1f;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: white;
+        font-size: 0.95rem;
+    }
+
+
     .settings-row input#settings-icon {
         max-width: 96px;
     }
@@ -467,15 +658,16 @@
     {:else}
         <div class="carousel" on:scroll={onScroll}>
             {#key actions}
-            {#each pages as p, i}
+            {#each visiblePages as p, i}
                 {@const total = gridSlots(p)}
                 {@const cols = gridCols(p)}
                 <section class="page">
+                    <div class="page-body">
+                    <div class="page-main">
                     <h2 class="page-title">
                         {#if p.icon}<span>{p.icon}</span>{/if}{p.name}
                         <button class="page-settings" aria-label="Configurar página" on:click={() => openSettings(p)}>⛶</button>
                     </h2>
-
                     <div class="grid" style="--cols: {cols}">
                         {#each Array(total) as _, slot}
                             {@const action = actionAt(p.id, slot)}
@@ -486,7 +678,11 @@
                                     icon={action.icon}
                                     type={action.type}
                                     command={action.command}
+                                    confirm={!!action.confirm}
+                                    showOutput={!!action.show_output}
                                     onMenu={() => menu = { page: p, slot, action }}
+                                    expanded={!!expanded && expanded.page === p.id && expanded.slot === slot}
+                                    onRun={action.type === 'app' ? () => toggleDrawer(p, slot, action) : () => {}}
                                 />
                             {:else}
                                 <button
@@ -497,6 +693,67 @@
                                 >+</button>
                             {/if}
                         {/each}
+                    </div>
+                    </div>
+                    {#if expanded && expanded.page === p.id}
+                        {@const aps = appPages(expanded.app)}
+                        {@const dcols = Math.max(3, ...aps.map(gridCols))}
+                        <div class="drawer">
+                            <div class="drawer-head">
+                                <span>{expanded.label}{#if drawerIndex < aps.length && aps.length > 1} · {aps[drawerIndex].name}{/if}</span>
+                                {#if drawerIndex < aps.length}
+                                    <button class="drawer-btn" aria-label="Configurar esta página de {expanded.label}" on:click={() => openSettings(aps[drawerIndex])}>⛶</button>
+                                {/if}
+                                <button class="drawer-btn" aria-label="Cerrar" on:click={() => expanded = null}>✕</button>
+                            </div>
+                            {#if aps.length > 0}
+                                <div class="drawer-carousel" style="--dcols: {dcols}" bind:this={drawerEl} on:scroll={onDrawerScroll}>
+                                    {#each aps as ap}
+                                        <div class="drawer-page">
+                                            <div class="grid" style="--cols: {gridCols(ap)}">
+                                                {#each Array(gridSlots(ap)) as _, aslot}
+                                                    {@const sub = actionAt(ap.id, aslot)}
+                                                    {#if sub}
+                                                        <ActionButton
+                                                            id={sub.id}
+                                                            label={sub.label}
+                                                            icon={sub.icon}
+                                                            type={sub.type}
+                                                            command={sub.command}
+                                                            confirm={!!sub.confirm}
+                                                            showOutput={!!sub.show_output}
+                                                            onMenu={() => menu = { page: ap, slot: aslot, action: sub }}
+                                                        />
+                                                    {:else}
+                                                        <button
+                                                            type="button"
+                                                            class="slot"
+                                                            aria-label="Asignar acción al slot {aslot + 1}"
+                                                            on:click={() => openPicker(ap, aslot)}
+                                                        >+</button>
+                                                    {/if}
+                                                {/each}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                    <div class="drawer-page drawer-add">
+                                        <button type="button" class="slot" aria-label="Nueva página de acciones para {expanded.label}" on:click={createAppPage}>+</button>
+                                        <span>Otra página para {expanded.label}</span>
+                                    </div>
+                                </div>
+                            {:else}
+                                <button class="empty-btn" on:click={createAppPage}>＋ Agregar acciones para {expanded.label}</button>
+                            {/if}
+                            {#if aps.length > 0}
+                                <div class="drawer-dots">
+                                    {#each aps as ap, i}
+                                        <button class="dot" class:active={i === drawerIndex} aria-label={ap.name} on:click={() => drawerTo(i)}></button>
+                                    {/each}
+                                    <button class="dot add" class:active={drawerIndex === aps.length} aria-label="Nueva página" on:click={() => drawerTo(aps.length)}></button>
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                     </div>
 
                     {#if overflowOn(p.id).length > 0}
@@ -509,6 +766,8 @@
                                     icon={a.icon}
                                     type={a.type}
                                     command={a.command}
+                                    confirm={!!a.confirm}
+                                    showOutput={!!a.show_output}
                                     onMenu={() => menu = { page: p, slot: -1, action: a }}
                                 />
                             {/each}
@@ -526,7 +785,7 @@
         </div>
 
         <div class="dots">
-            {#each pages as p, i}
+            {#each visiblePages as p, i}
                 <button
                     class:active={i === currentPage}
                     class="dot"
@@ -535,10 +794,10 @@
                 ></button>
             {/each}
             <button
-                class:active={pages.length === currentPage}
+                class:active={visiblePages.length === currentPage}
                 class="dot add"
                 aria-label="Nueva página"
-                on:click={() => scrollTo(pages.length)}
+                on:click={() => scrollTo(visiblePages.length)}
             ></button>
         </div>
     {/if}
@@ -603,6 +862,18 @@
                     <label for="settings-rows">Filas</label>
                     <input id="settings-rows" type="number" min="1" max="6" bind:value={settingsRows} />
                 </div>
+            </div>
+            <div class="field">
+                <label for="settings-app">App vinculada (la página se vuelve el cajón de esa app y sale del carrusel)</label>
+                <select id="settings-app" bind:value={settingsApp}>
+                    <option value="">— Ninguna —</option>
+                    {#if settingsApp && !installedApps.some(a => a.name === settingsApp)}
+                        <option value={settingsApp}>{settingsApp}</option>
+                    {/if}
+                    {#each installedApps as a}
+                        <option value={a.name}>{a.name}</option>
+                    {/each}
+                </select>
             </div>
             <button class="menu-btn" on:click={saveSettings}>Guardar</button>
         </div>
