@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { authUrl } from '$lib/api/api';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
 import { getAction, updateAction } from '$lib/api/actions';
@@ -8,9 +9,12 @@ import { getAction, updateAction } from '$lib/api/actions';
     import type { Page } from '$lib/api/pages';
     import { getApps, appIconUrl, appActionId } from '$lib/api/apps';
     import type { App } from '$lib/api/apps';
-    import { getSystemActions, executeSystemActionWithFeedback } from '$lib/api/system';
+    import { getSystemActions } from '$lib/api/system';
     import type { SystemAction } from '$lib/api/system';
     import HotkeyRecorder from '$lib/components/HotkeyRecorder.svelte';
+    import ExecutionOptions from '$lib/components/ExecutionOptions.svelte';
+    import { parseTimeout } from '$lib/timeout';
+    import { runAction } from '$lib/run';
 
     export let params;
 
@@ -32,6 +36,9 @@ import { getAction, updateAction } from '$lib/api/actions';
     let icon = "";
     let page = "general";
     let positionStr = "";
+    let confirm = false;
+    let showOutput = false;
+    let timeoutStr = "";
 
     let message = "";
     let messageType: "success" | "error" | "" = "";
@@ -91,6 +98,9 @@ import { getAction, updateAction } from '$lib/api/actions';
         icon = action.icon ?? "";
         page = action.page ?? "general";
         positionStr = action.position !== undefined && action.position >= 0 ? String(action.position) : "";
+        confirm = !!action.confirm;
+        showOutput = !!action.show_output;
+        timeoutStr = action.timeout_seconds ? String(action.timeout_seconds) : "";
     });
 
     async function save() {
@@ -102,6 +112,9 @@ import { getAction, updateAction } from '$lib/api/actions';
                 command,
                 icon,
                 page,
+                confirm,
+                show_output: showOutput,
+                timeout_seconds: parseTimeout(timeoutStr),
                 position: positionStr === "" ? -1 : parseInt(positionStr, 10)
             });
 
@@ -117,13 +130,9 @@ import { getAction, updateAction } from '$lib/api/actions';
         }
     }
 
+    // Prueba la acción guardada (sin confirmación) y muestra siempre su salida.
     async function test() {
-        try {
-            await executeSystemActionWithFeedback({ id, label, icon, type, command });
-            showMessage("Acción ejecutada", "success");
-        } catch (e) {
-            showMessage("Error al ejecutar", "error");
-        }
+        await runAction({ id, label, icon, type, command, show_output: true });
     }
 
     $: isImage = icon?.startsWith("http") || icon?.startsWith("/");
@@ -380,7 +389,7 @@ import { getAction, updateAction } from '$lib/api/actions';
     <!-- PREVIEW -->
     <div class="preview">
         {#if isImage}
-            <img src={icon} alt="" />
+            <img src={authUrl(icon)} alt="" />
         {:else}
             <div class="emoji">{icon}</div>
         {/if}
@@ -440,7 +449,7 @@ import { getAction, updateAction } from '$lib/api/actions';
                                 class="app-item {command === a.name ? 'selected' : ''}"
                                 on:click={() => selectApp(a)}
                             >
-                                <img src={appIconUrl(a.path)} alt={a.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                                <img src={authUrl(appIconUrl(a.path))} alt={a.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                                 <span>{a.name}</span>
                                 {#if command === a.name}
                                     <span class="check">✓</span>
@@ -454,7 +463,7 @@ import { getAction, updateAction } from '$lib/api/actions';
                 {:else}
                     <button type="button" class="app-select" on:click={openAppPicker}>
                         {#if selectedApp}
-                            <img src={appIconUrl(selectedApp.path)} alt={selectedApp.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                            <img src={authUrl(appIconUrl(selectedApp.path))} alt={selectedApp.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                             <span>{selectedApp.name}</span>
                         {:else}
                             <span class="placeholder">Selecciona una app…</span>
@@ -510,7 +519,9 @@ import { getAction, updateAction } from '$lib/api/actions';
             </div>
         {/if}
 
-        <button class="btn-save" on:click={test}>▶ Probar</button>
+        <ExecutionOptions {type} bind:confirm bind:showOutput bind:timeoutStr />
+
+        <button class="btn-save" on:click={test}>▶ Probar (versión guardada)</button>
         <button class="btn-save" on:click={save}>Guardar cambios</button>
     </div>
 </div>

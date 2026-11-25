@@ -2,10 +2,12 @@ package system
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	systemcontrol "master-control/infrastructure/system"
 	"master-control/model"
 )
 
@@ -15,6 +17,7 @@ type useCase interface {
 	GetBrightness(ctx context.Context) (model.SystemBrightness, error)
 	SetVolume(ctx context.Context, volume int) error
 	SetBrightness(ctx context.Context, brightness float64) error
+	Scroll(ctx context.Context, dx, dy int) error
 }
 
 type handler struct {
@@ -85,4 +88,23 @@ func (h handler) setBrightness(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, model.Message{Message: "success"})
+}
+
+func (h handler) scroll(c *gin.Context) {
+	var req model.SystemScroll
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, model.Error{Error: err.Error()})
+		return
+	}
+
+	if err := h.useCase.Scroll(c.Request.Context(), req.DX, req.DY); err != nil {
+		status := http.StatusInternalServerError
+		if errors.Is(err, systemcontrol.ErrNoAccessibility) {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, model.Error{Error: err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

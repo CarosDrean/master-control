@@ -1,4 +1,4 @@
-import { getApiBase } from './api';
+import { apiFetch, getApiBase } from './api';
 
 export interface App {
     name: string;
@@ -17,6 +17,6 @@ export function appActionId(name: string): string {
 }
 
 export async function getApps(): Promise<App[]> {
-    const res = await fetch(`${BASE_URL}/apps`);
+    const res = await apiFetch(`/apps`);
     return res.json();
 }

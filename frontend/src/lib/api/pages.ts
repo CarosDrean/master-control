@@ -1,4 +1,4 @@
-import { getApiBase } from './api';
+import { apiFetch } from './api';
 
 export interface Page {
     id: string;
@@ -7,22 +7,22 @@ export interface Page {
     order: number;
     columns?: number;
     rows?: number;
+    /** App de la Mac vinculada (nombre del bundle sin ".app"): la UI salta aquí cuando pasa al frente. */
+    app?: string;
 }
 
-const BASE_URL = getApiBase();
-
 export async function getPages(): Promise<Page[]> {
-    const res = await fetch(`${BASE_URL}/pages`);
+    const res = await apiFetch(`/pages`);
     return res.json();
 }
 
 export async function getPage(id: string): Promise<Page> {
-    const res = await fetch(`${BASE_URL}/pages/${id}`);
+    const res = await apiFetch(`/pages/${id}`);
     return res.json();
 }
 
 export async function createPage(p: Page): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${BASE_URL}/pages`, {
+    const res = await apiFetch(`/pages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(p)
@@ -36,7 +36,7 @@ export async function createPage(p: Page): Promise<{ success: boolean; message: 
 }
 
 export async function updatePage(p: Page): Promise<{ success: boolean; message: string }> {
-    const res = await fetch(`${BASE_URL}/pages/${p.id}`, {
+    const res = await apiFetch(`/pages/${p.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(p)
@@ -50,7 +50,7 @@ export async function updatePage(p: Page): Promise<{ success: boolean; message: 
 }
 
 export async function deletePage(id: string): Promise<void> {
-    await fetch(`${BASE_URL}/pages/${id}`, {
+    await apiFetch(`/pages/${id}`, {
         method: "DELETE"
     });
 }

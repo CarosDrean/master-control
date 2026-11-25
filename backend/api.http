@@ -1,19 +1,28 @@
+# Variables: token = MC_TOKEN de backend/.env
+@base = http://127.0.0.1:8080/master-control
+@token = pega-aqui-tu-MC_TOKEN
+
 ### GET actions
-GET http://0.0.0.0:8080/master-control/actions
+GET {{base}}/actions
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ### Obtener acción por ID
-GET http://0.0.0.0:8080/master-control/actions/open_vscode
+GET {{base}}/actions/open_vscode
+Authorization: Bearer {{token}}
 Accept: application/json
 
 ### Ejecutar VSCode
-POST http://0.0.0.0:8080/master-control/actions/open_vscode/execute
+POST {{base}}/actions/open_vscode/execute
+Authorization: Bearer {{token}}
 
 ### Eliminar acción
-DELETE http://0.0.0.0:8080/master-control/actions/open_vscode
+DELETE {{base}}/actions/open_vscode
+Authorization: Bearer {{token}}
 
 ### Crear una acción tipo command
-POST http://0.0.0.0:8080/master-control/actions
+POST {{base}}/actions
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -26,7 +35,8 @@ Content-Type: application/json
 
 
 ### Crear una acción tipo AppleScript (ctrl+tab)
-POST http://0.0.0.0:8080/master-control/actions
+POST {{base}}/actions
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -38,7 +48,8 @@ Content-Type: application/json
 }
 
 ### Crear acción scroll simple (flecha abajo repetida)
-POST http://0.0.0.0:8080/master-control/actions
+POST {{base}}/actions
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -48,3 +59,23 @@ Content-Type: application/json
   "type": "applescript",
   "command": "repeat 10 times tell application \\\"System Events\\\" to key code 125 end repeat"
 }
+
+### Acción con salida, confirmación y timeout propio
+POST {{base}}/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": "disk_usage",
+  "label": "Disco",
+  "icon": "💾",
+  "type": "command",
+  "command": "df -h /",
+  "show_output": true,
+  "confirm": false,
+  "timeout_seconds": 5
+}
+
+### Ejecutar y ver la salida (ok, exit_code, stdout, stderr, duration_ms, timed_out, truncated)
+POST {{base}}/actions/disk_usage/execute
+Authorization: Bearer {{token}}

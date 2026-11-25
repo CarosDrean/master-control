@@ -10,6 +10,9 @@ Panel para controlar tu Mac desde el navegador: dispara acciones, hotkeys y apli
 - **Explorador de apps**: lista las aplicaciones instaladas en `/Applications` y sirve sus iconos.
 - **Tipos de acción** (`action-types`) manejables vía API y sembrados al arrancar.
 - **Persistencia** en bbolt (base de datos embebida, un solo archivo).
+- **Acceso protegido**: token obligatorio (`MC_TOKEN`) en toda la API, escucha solo en `127.0.0.1` por defecto y CORS limitado a la UI.
+- **Salida de comandos**: cada ejecución devuelve `stdout`, `stderr`, exit code y duración; la UI muestra un aviso o la salida completa.
+- **Por acción**: pedir confirmación antes de ejecutar, mostrar siempre la salida y timeout propio (acotado por `MC_MAX_TIMEOUT`).
 
 ## Capturas
 
@@ -76,10 +79,32 @@ Arquitectura en capas: `bootstrap/` inyecta los casos de uso (`domain/`) a los h
 Levanta ambos servicios desde la raíz:
 
 ```sh
-./dev.sh
+./dev.sh               # solo esta Mac (127.0.0.1) — por defecto
+./dev.sh --tailscale   # tu tailnet: iPad/iPhone con Tailscale, tráfico cifrado (recomendado)
+./dev.sh --lan         # la red local: HTTP sin cifrar, el token viaja en claro por el WiFi
 ```
 
-Equivale a correr `go run .` en `backend/` y `pnpm dev --host` en `frontend/`. Crea `backend/.env` con valores por defecto si no existe, y detecta la IP local de tu Mac para mostrar las URLs a las que conectarte desde una tablet o celular en la misma red (UI y API).
+`./dev.sh` crea `backend/.env` si falta, genera un `MC_TOKEN` persistente la primera vez y
+arranca `go run .` (backend) y `pnpm dev` (frontend) en la interfaz del modo elegido, con CORS
+limitado a esa UI. Imprime la URL de acceso con el token en el fragmento
+(`http://<host>:5173/#token=…`) y, si tienes `qrencode` (`brew install qrencode`), un QR para
+escanearla desde la tablet. Ábrela **una vez por dispositivo**: el token queda guardado en el
+navegador y se quita de la barra de direcciones. Sin él, la UI pide pegar el `MC_TOKEN`.
+
+### Usarlo desde el iPad o el iPhone (Tailscale)
+
+1. Instala Tailscale en la Mac y en el iPad/iPhone e inicia sesión con la misma cuenta.
+2. `./dev.sh --tailscale` y escanea el QR (o abre la URL) en el dispositivo.
+3. Opcional: «Compartir → Añadir a pantalla de inicio» para abrirlo como app.
+
+Así el panel solo es accesible desde tus dispositivos y nunca desde el WiFi de la oficina o un café.
+
+### Atajos de Siri y Apple Watch
+
+Cualquier acción se puede disparar sin abrir la UI: en la app Atajos, «Obtener contenido de URL»
+con método `POST` a `http://<IP-tailscale>:8080/master-control/actions/<id>/execute` y la cabecera
+`Authorization: Bearer <MC_TOKEN>`. Ponle un nombre y se ejecuta con «Oye Siri, <nombre>» o desde
+la Watch. La respuesta es JSON (`ok`, `stdout`, …) por si quieres que Siri lea la salida.
 
 ### Backend
 
@@ -88,19 +113,18 @@ cd backend
 go run .
 ```
 
-Servidor en `http://localhost:8080/master-control`. Configuración vía `backend/.env` (ver `backend/.gitignore`). `./dev.sh` crea `backend/.env` automáticamente con valores por defecto si no existe:
-
-```sh
-GIN_MODE=release
-APP_NAME=master-control
-BUCKET_NAME=actions
-```
+Servidor en `http://127.0.0.1:8080/master-control`. Configuración vía `backend/.env` (gitignored; plantilla en `backend/.env.example`). Las variables exportadas en el entorno ganan sobre `.env` (así las fija `./dev.sh`).
 
 | Variable    | Uso                                            |
 |-------------|------------------------------------------------|
 | `GIN_MODE`  | Modo de Gin (`debug` / `release`)              |
 | `APP_NAME`  | Prefijo de ruta de la API; usa `master-control` |
 | `BUCKET_NAME` | Reservado (los buckets de bbolt están definidos en el código) |
+| `MC_TOKEN`  | Token obligatorio de la API (salvo `/health`). Vacío = uno efímero por ejecución, impreso en el log |
+| `MC_HOST`   | Interfaz en la que escucha (default `127.0.0.1`) |
+| `MC_PORT`   | Puerto (default `8080`)                         |
+| `MC_ALLOWED_ORIGINS` | Orígenes de la UI permitidos por CORS, separados por coma. Vacío = todos (con token igualmente) |
+| `MC_MAX_TIMEOUT` | Tope en segundos del `timeout_seconds` de cualquier acción (default `120`) |
 
 > Si `APP_NAME` queda vacío, la API se sirve en `/` en vez de `/master-control`.
 
@@ -110,14 +134,13 @@ BUCKET_NAME=actions
 cd frontend
 pnpm install
 pnpm dev            # solo local (localhost)
-pnpm dev --host     # accesible desde otros dispositivos de la red
 ```
 
-La UI apunta a la API en `http://<host>:8080/master-control` (definido en `frontend/src/lib/api/api.ts`; sin proxy de Vite, el backend responde CORS para todos los orígenes). Para usar la app desde una tablet/celular entra a `http://<IP-del-Mac>:5173`; la IP la muestra `./dev.sh`.
+La UI apunta a la API en `http://<host>:8080/master-control` (definido en `frontend/src/lib/api/api.ts`; sin proxy de Vite). Todas las peticiones pasan por `apiFetch`, que añade el token; los iconos (`<img>`) lo llevan en `?token=` vía `authUrl`, solo al mostrarse (nunca se guarda en la acción). Para otros dispositivos usa `./dev.sh --tailscale`.
 
 ## API
 
-Prefijo base: `/master-control` · CORS abierto · BBDD: bbolt (`bbolt.db`)
+Prefijo base: `/master-control` · Auth: `Authorization: Bearer <MC_TOKEN>` (o `?token=` para imágenes) en todo salvo `/health` · CORS: `MC_ALLOWED_ORIGINS` · BBDD: bbolt (`bbolt.db`)
 
 | Método | Ruta                          | Descripción                              |
 |--------|-------------------------------|------------------------------------------|
@@ -127,7 +150,7 @@ Prefijo base: `/master-control` · CORS abierto · BBDD: bbolt (`bbolt.db`)
 | POST   | `/actions`                    | Crea acción                              |
 | PUT    | `/actions/:id`                | Actualiza acción                         |
 | DELETE | `/actions/:id`                | Elimina acción                           |
-| POST   | `/actions/:id/execute`        | Ejecuta la acción en el Mac              |
+| POST   | `/actions/:id/execute`        | Ejecuta la acción y devuelve `{ok, exit_code, stdout, stderr, duration_ms, timed_out, truncated}` (un exit code ≠ 0 es `200` con `ok:false`) |
 | GET    | `/action-types`               | Lista tipos de acción (seed al arrancar) |
 | GET/POST/PUT/DELETE | `/action-types[/:id]` | CRUD de tipos de acción                  |
 | GET    | `/pages`                      | Lista páginas                            |
@@ -144,9 +167,23 @@ Prefijo base: `/master-control` · CORS abierto · BBDD: bbolt (`bbolt.db`)
 - La lista e iconos de apps escanean `/Applications` y generan iconos con `sips`.
 - El paquete `infrastructure/hotkey` usa **cgo** (Carbon/ApplicationServices, `//go:build darwin`); en otras plataformas devuelve `ErrNotSupported`.
 
+## Campos de una acción
+
+| Campo | Uso |
+|-------|-----|
+| `id`, `label`, `icon`, `type`, `command`, `page`, `position` | Como antes |
+| `confirm` | La UI pide confirmación (mostrando el comando) antes de ejecutar; el botón lleva 🔒 |
+| `show_output` | La UI abre la salida al terminar. Un fallo o timeout la abre siempre; si no, solo un aviso breve |
+| `timeout_seconds` | Timeout propio (vacío = 10 s), recortado a `MC_MAX_TIMEOUT` |
+
+La salida se recorta a 16 KB por stream (`truncated: true`).
+
 ## Verificación
 
-No hay tests ni linters configurados.
+```sh
+cd backend && go build ./... && go vet ./... && go test ./...
+cd frontend && pnpm check && pnpm build
+```
 
 ```sh
 # Backend

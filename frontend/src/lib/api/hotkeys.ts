@@ -1,4 +1,4 @@
-import { getApiBase } from './api';
+import { apiFetch } from './api';
 
 export interface Hotkey {
     keycode: number;
@@ -13,11 +13,9 @@ export interface HotkeyCaptureResult {
     status?: number;
 }
 
-const BASE_URL = getApiBase();
-
 export async function captureHotkey(): Promise<HotkeyCaptureResult> {
     try {
-        const res = await fetch(`${BASE_URL}/hotkey/capture`, {
+        const res = await apiFetch(`/hotkey/capture`, {
             method: "POST"
         });
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { authUrl } from '$lib/api/api';
     import { onMount } from 'svelte';
     import { createAction } from '$lib/api/actions';
     import { getActionTypes } from '$lib/api/actiontypes';
@@ -8,6 +9,8 @@
     import { getSystemActions } from '$lib/api/system';
     import type { SystemAction } from '$lib/api/system';
     import HotkeyRecorder from '$lib/components/HotkeyRecorder.svelte';
+    import ExecutionOptions from '$lib/components/ExecutionOptions.svelte';
+    import { parseTimeout } from '$lib/timeout';
 
     export let pageId = "general";
     export let position: number | null = null;
@@ -27,6 +30,9 @@
     let label = "";
     let command = "";
     let icon = "";
+    let confirm = false;
+    let showOutput = false;
+    let timeoutStr = "";
 
     // La posición se fija al elegir un slot: no es editable ni visible.
     $: locked = position !== null && position !== undefined;
@@ -134,6 +140,9 @@
                 command,
                 icon,
                 page: pageId,
+                confirm,
+                show_output: showOutput,
+                timeout_seconds: parseTimeout(timeoutStr),
                 position: locked ? position! : (positionStr === "" ? -1 : parseInt(positionStr, 10))
             });
 
@@ -377,7 +386,7 @@
 
 <div class="preview">
     {#if isImage}
-        <img src={icon} alt="" />
+        <img src={authUrl(icon)} alt="" />
     {:else}
         <div class="emoji">{icon}</div>
     {/if}
@@ -413,7 +422,7 @@
                             class="app-item {command === a.name ? 'selected' : ''}"
                             on:click={() => selectApp(a)}
                         >
-                            <img src={appIconUrl(a.path)} alt={a.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                            <img src={authUrl(appIconUrl(a.path))} alt={a.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                             <span>{a.name}</span>
                             {#if command === a.name}
                                 <span class="check">✓</span>
@@ -427,7 +436,7 @@
             {:else}
                 <button type="button" class="app-select" on:click={openAppPicker}>
                     {#if selectedApp}
-                        <img src={appIconUrl(selectedApp.path)} alt={selectedApp.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                        <img src={authUrl(appIconUrl(selectedApp.path))} alt={selectedApp.name} on:error={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
                         <span>{selectedApp.name}</span>
                     {:else}
                         <span class="placeholder">Selecciona una app…</span>
@@ -492,6 +501,8 @@
         <label for="icon">Icono (emoji o URL)</label>
         <input id="icon" bind:value={icon} placeholder="😀 o https://…" />
     </div>
+
+    <ExecutionOptions {type} bind:confirm bind:showOutput bind:timeoutStr />
 
     {#if !locked}
         <div class="field">

@@ -13,4 +13,5 @@ func NewRouter(api *gin.RouterGroup, useCase model.SystemUseCase) {
 	routes.GET("brightness", newHandler(useCase).getBrightness)
 	routes.POST("volume", newHandler(useCase).setVolume)
 	routes.POST("brightness", newHandler(useCase).setBrightness)
+	routes.POST("scroll", newHandler(useCase).scroll)
 }

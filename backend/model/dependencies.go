@@ -3,7 +3,7 @@ package model
 import "context"
 
 type ActionUseCase interface {
-	Execute(ctx context.Context, id string) error
+	Execute(ctx context.Context, id string) (ExecutionResult, error)
 	Set(ctx context.Context, action Action) error
 	GetAll(ctx context.Context) ([]Action, error)
 	Get(ctx context.Context, id string) (Action, error)
@@ -31,6 +31,7 @@ type SystemUseCase interface {
 	GetBrightness(ctx context.Context) (SystemBrightness, error)
 	SetVolume(ctx context.Context, volume int) error
 	SetBrightness(ctx context.Context, brightness float64) error
+	Scroll(ctx context.Context, dx, dy int) error
 }
 
 type Dependencies struct {
